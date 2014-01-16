@@ -112,7 +112,7 @@ public class TrueFXSpout extends BaseRichSpout {
 				String time = msTime.get(i);
 				
 				//emit
-				_collector.emit(new Values(pair, bid, offer, time));
+				_collector.emit(new Values(pair, Double.parseDouble(bid), Double.parseDouble(offer), Long.parseLong(time)));
 			}
 		}
 	
