@@ -47,6 +47,7 @@ public class TrueFXSpout extends BaseRichSpout {
 			connection = null;
 			connection = (HttpURLConnection) serverAddress.openConnection();
 			connection.setRequestMethod("GET");
+		//	connection.setReadTimeout(500);
 			connection.connect();
 			rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			data = rd.readLine();

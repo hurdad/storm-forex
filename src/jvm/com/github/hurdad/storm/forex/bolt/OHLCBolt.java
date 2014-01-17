@@ -1,5 +1,7 @@
 package com.github.hurdad.storm.forex.bolt;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,19 +48,24 @@ public class OHLCBolt extends BaseRichBolt {
 		String pair = tuple.getStringByField("pair");
 		Double bid = tuple.getDoubleByField("bid");
 		Double offer = tuple.getDoubleByField("offer");
-		Integer ts = (int)Math.floor((tuple.getLongByField("timestamp") / 1000));
+		Long ts = (long) Math.floor((tuple.getLongByField("timestamp") / 1000));
 		
 		//filter duplicate or old ts
 		if(_lastTimeMap.get(pair) != null && ts <= _lastTimeMap.get(pair))
 			return;
 		
 		//calculate timeslice from timestamp
-		Double timeslice = Math.floor((ts / _time_window)) * _time_window;
+		Long timeslice = (long)Math.floor((ts / _time_window)) * _time_window;
+	
+		Date date= new Date();
+		Date mydate= new Date(timeslice * 1000);
+		//System.out.println(date.getTime());
+		//System.out.println(timeslice * 1000);
+		//System.out.println(new Timestamp(date.getTime()) + " pair: " + pair + " timeslice:" + new Timestamp(timeslice * 1000) + " ts:" + new Timestamp(ts * 1000));
 		
 		//timeslice change - output previous candle OHLCV
 		if( _currentTimesliceMap.get(pair) != null && timeslice.intValue() != _currentTimesliceMap.get(pair)){
 			
-	
 			//emit
 			_collector.emit(new Values(pair, _opens.get(pair), _highs.get(pair), _lows.get(pair), _previousBidMap.get(pair), _vols.get(pair), _currentTimesliceMap.get(pair), _time_window));
 			
@@ -90,7 +97,7 @@ public class OHLCBolt extends BaseRichBolt {
 			
 		//save
 		_previousBidMap.put(pair, bid);
-		_lastTimeMap.put(pair, ts);
+		_lastTimeMap.put(pair, ts.intValue());
 		_currentTimesliceMap.put(pair, timeslice.intValue());
 	
 	}
