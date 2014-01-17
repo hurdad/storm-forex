@@ -1,7 +1,5 @@
 package com.github.hurdad.storm.forex.bolt;
 
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -58,12 +56,7 @@ public class SMABolt extends BaseRichBolt {
 			}
 			Double sma = sum / _period;
 			sma = Math.round(sma*100000)/100000.0d;
-			
-			
-			if (pair.equals("EUR/USD")){
-				Date date= new Date();
-				System.out.println(new Timestamp(date.getTime()) + " [" + pair + "] sma:" + sma + " @ " + new Timestamp(timeslice * 1000));
-			}
+
 			//emit
 			_collector.emit(new Values(pair, sma, timeslice));
 		

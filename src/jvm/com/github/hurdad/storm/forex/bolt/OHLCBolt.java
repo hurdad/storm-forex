@@ -56,13 +56,7 @@ public class OHLCBolt extends BaseRichBolt {
 		
 		//calculate timeslice from timestamp
 		Long timeslice = (long)Math.floor((ts / _time_window)) * _time_window;
-	
-		Date date= new Date();
-		Date mydate= new Date(timeslice * 1000);
-		//System.out.println(date.getTime());
-		//System.out.println(timeslice * 1000);
-		//System.out.println(new Timestamp(date.getTime()) + " pair: " + pair + " timeslice:" + new Timestamp(timeslice * 1000) + " ts:" + new Timestamp(ts * 1000));
-		
+			
 		//timeslice change - output previous candle OHLCV
 		if( _currentTimesliceMap.get(pair) != null && timeslice.intValue() != _currentTimesliceMap.get(pair)){
 			

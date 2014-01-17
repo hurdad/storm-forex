@@ -1,7 +1,5 @@
 package com.github.hurdad.storm.forex.bolt;
 
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -75,10 +73,8 @@ public class EMABolt extends BaseRichBolt {
 				
 				//calc ema
 				Double ema = (close - _prev_emas.get(pair)) * _smoothing_constant + _prev_emas.get(pair);
-				
-				Date date= new Date();
-				System.out.println(new Timestamp(date.getTime()) + " [" + pair + "] ema:" + ema + " @ " + timeslice);
-				
+				ema = Math.round(ema*100000)/100000.0d;
+						
 				//emit
 				_collector.emit(new Values(pair, ema, timeslice));
 				
