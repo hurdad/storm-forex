@@ -18,7 +18,7 @@ public class SMABolt extends BaseRichBolt {
 	Integer _period;
 	Map<String, Queue<Double>> _queues;
 
-	public SMABolt(Integer period){
+	public SMABolt(Integer period) {
 		_period = period;
 	}
 
@@ -27,50 +27,53 @@ public class SMABolt extends BaseRichBolt {
 		_collector = collector;
 		_queues = new HashMap<String, Queue<Double>>();
 	}
-	
+
 	@Override
 	public void execute(Tuple tuple) {
-		
-		//input vars
+
+		// input vars
 		String pair = tuple.getStringByField("pair");
 		Double close = tuple.getDoubleByField("close");
-		Long timeslice = (long)tuple.getIntegerByField("timeslice");
-		
-		//init
-		if(_queues.get(pair) == null)
+		Integer timeslice = tuple.getIntegerByField("timeslice");
+
+		// init
+		if (_queues.get(pair) == null)
 			_queues.put(pair, new LinkedList<Double>());
-		
-		//get queue for pair
+
+		// get queue for pair
 		Queue<Double> q = _queues.get(pair);
-		
-		//push close price onto queue
+
+		// push close price onto queue
 		q.add(close);
-		
-		//check if we have enough data to calc sma
-		if(q.size() >= _period){
-		
-			//calc sma
+
+		// check if we have enough data to calc sma
+		if (q.size() >= _period) {
+
+			// calc sma
 			Double sum = 0d;
-			for(Double val : q) {
-			    sum = sum + val;
+			for (Double val : q) {
+				sum = sum + val;
 			}
 			Double sma = sum / _period;
-			sma = Math.round(sma*100000)/100000.0d;
+			sma = Math.round(sma * 100000) / 100000.0d;
 
-			//emit
-			_collector.emit(new Values(pair, sma, timeslice));
-		
-			//pop last item queue
+			if (pair.equals("EUR/USD"))
+				System.out.println(pair + " sma:" + sma + " " + timeslice);
+
+			// emit
+			_collector.emit(new Values(pair, timeslice, sma));
+
+			// pop last item queue
 			q.poll();
 		}
-		
-		//save
+
+		// save
 		_queues.put(pair, q);
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("pair", "sma", "timeslice"));
+		declarer.declare(new Fields("pair", "timeslice", "sma"));
 	}
 
 }

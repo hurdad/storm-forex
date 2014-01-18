@@ -1,6 +1,5 @@
 package com.github.hurdad.storm.forex;
 
-
 import com.github.hurdad.storm.forex.bolt.*;
 import com.github.hurdad.storm.forex.spout.*;
 
@@ -17,14 +16,19 @@ public class Example {
 		TopologyBuilder builder = new TopologyBuilder();
 
 		builder.setSpout("truefx", new TrueFXSpout(50), 2);
-		builder.setBolt("ohlc_10", new OHLCBolt(10), 1).fieldsGrouping("truefx", new Fields("pair"));
-		builder.setBolt("sma_5", new SMABolt(5),2).fieldsGrouping("ohlc_10", new Fields("pair"));
-		builder.setBolt("ema_5", new EMABolt(5),2).fieldsGrouping("ohlc_10", new Fields("pair"));
-		builder.setBolt("rsi_5", new RSIBolt(5),2).fieldsGrouping("ohlc_10", new Fields("pair"));
-		
+		builder.setBolt("ohlc_10", new OHLCBolt(10), 1)
+				.fieldsGrouping("truefx", new Fields("pair"));
+		builder.setBolt("sma_5", new SMABolt(5), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("ema_5", new EMABolt(5), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("rsi_5", new RSIBolt(5), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+
+		builder.setBolt("summary", new SummaryBolt(), 1)
+				.fieldsGrouping("sma_5", new Fields("pair", "timeslice"))
+				.fieldsGrouping("ema_5", new Fields("pair", "timeslice"))
+				.fieldsGrouping("rsi_5", new Fields("pair", "timeslice"));
 
 		Config conf = new Config();
-		//conf.setDebug(true);
+		// conf.setDebug(true);
 
 		if (args != null && args.length > 0) {
 			conf.setNumWorkers(3);
@@ -38,5 +42,4 @@ public class Example {
 			cluster.shutdown();
 		}
 	}
-
 }

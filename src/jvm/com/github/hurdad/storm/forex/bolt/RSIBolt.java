@@ -32,80 +32,81 @@ public class RSIBolt extends BaseRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-		
-		//input vars
+
+		// input vars
 		String pair = tuple.getStringByField("pair");
 		Double close = tuple.getDoubleByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
-		
-		//init
-		if(_change_queues.get(pair) == null)
+
+		// init
+		if (_change_queues.get(pair) == null)
 			_change_queues.put(pair, new LinkedList<Double>());
-		
-		//pair change q
+
+		// pair change q
 		Queue<Double> q = _change_queues.get(pair);
-		
-		//need 2 points to get change
-		if(_prev_close.get(pair) != null){
-        	
-        	//calc change
+
+		// need 2 points to get change
+		if (_prev_close.get(pair) != null) {
+
+			// calc change
 			Double change = close - _prev_close.get(pair);
 
-        	//add to front
-        	q.add(change);	
-        
-        }
-        
-        //have enough data to calc rsi
-        if(q.size() >= _period){
-    
-        	Double sum_gain = 0d;
-        	Double sum_loss = 0d;
-        	
-        	//loop change
-        	for(Double change : q) {
-        		
-        	  if(change >= 0)
-                      sum_gain += change;
+			// add to front
+			q.add(change);
 
-              if(change < 0)
-                      sum_loss += Math.abs(change);
-        		
-        	}
-			  
+		}
+
+		// have enough data to calc rsi
+		if (q.size() >= _period) {
+
+			Double sum_gain = 0d;
+			Double sum_loss = 0d;
+
+			// loop change
+			for (Double change : q) {
+
+				if (change >= 0)
+					sum_gain += change;
+
+				if (change < 0)
+					sum_loss += Math.abs(change);
+
+			}
+
 			Double avg_gain = sum_gain / _period;
 			Double avg_loss = sum_loss / _period;
-			
-			//check divide by zero
+
+			// check divide by zero
 			Double rsi;
-			if(avg_loss == 0){
+			if (avg_loss == 0) {
 				rsi = 100.00d;
 			} else {
-				//calc and normalize
-				Double rs = avg_gain / avg_loss;                                
-				rsi = 100 - (100 / ( 1 + rs));
-				rsi = Math.round(rsi*100)/100.0d;
+				// calc and normalize
+				Double rs = avg_gain / avg_loss;
+				rsi = 100 - (100 / (1 + rs));
+				rsi = Math.round(rsi * 100) / 100.0d;
 			}
-			        	
-			System.out.println(pair + " rsi:" + rsi);
-			
-			//emit
-			_collector.emit(new Values(pair, rsi, timeslice));
-			
-			//pop last item queue
+
+			if (pair.equals("EUR/USD"))
+				System.out.println(pair + " rsi:" + rsi + " " + timeslice);
+
+			// emit
+			_collector.emit(new Values(pair, timeslice, rsi));
+
+			// pop last item queue
 			q.poll();
-		
-        }
-		
-        //save
-        _change_queues.put(pair, q);
-      	_prev_close.put(pair, close);
-	
+
+		}
+
+		// save
+		_change_queues.put(pair, q);
+		_prev_close.put(pair, close);
+
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("pair", "rsi", "timeslice"));
+		declarer.declare(new Fields("pair", "timeslice", "rsi"));
 	}
 
 }

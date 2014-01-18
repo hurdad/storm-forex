@@ -9,11 +9,12 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
-public class ATRBolt extends BaseRichBolt {
+public class ROCBolt extends BaseRichBolt {
+
 	OutputCollector _collector;
 	Integer _period;
-
-	public ATRBolt(Integer period) {
+	
+	public ROCBolt(Integer period) {
 		_period = period;
 	}
 
@@ -29,14 +30,13 @@ public class ATRBolt extends BaseRichBolt {
 		String pair = tuple.getStringByField("pair");
 		Double high = tuple.getDoubleByField("high");
 		Double low = tuple.getDoubleByField("low");
-		Double close = tuple.getDoubleByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("pair", "timeslice", "atr"));
+		declarer.declare(new Fields("pair", "timeslice", "roc"));
 	}
 
 }
