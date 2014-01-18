@@ -70,7 +70,7 @@ public class SMABolt extends BaseRichBolt {
 		}
 
 		// save
-		_queues.put(pair, q);
+		_close_queues.put(pair, q);
 	}
 
 	@Override

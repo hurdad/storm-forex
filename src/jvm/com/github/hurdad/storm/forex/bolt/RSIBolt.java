@@ -18,6 +18,7 @@ public class RSIBolt extends BaseRichBolt {
 	Integer _period;
 	Map<String, Queue<Double>> _change_queues;
 	Map<String, Double> _prev_close;
+	Integer _counter;
 
 	public RSIBolt(Integer period) {
 		_period = period;
@@ -53,6 +54,10 @@ public class RSIBolt extends BaseRichBolt {
 
 			// add to front
 			q.add(change);
+			
+			//pop back if too long
+			if(q.size() > _period)
+				q.poll();
 
 		}
 
@@ -92,9 +97,6 @@ public class RSIBolt extends BaseRichBolt {
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, rsi));
-
-			// pop last item queue
-			q.poll();
 
 		}
 

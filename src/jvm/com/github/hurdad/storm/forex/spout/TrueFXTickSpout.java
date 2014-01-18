@@ -19,7 +19,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 
-public class TrueFXSpout extends BaseRichSpout {
+public class TrueFXTickSpout extends BaseRichSpout {
 	SpoutOutputCollector _collector;
 	Integer wait;
 	HttpURLConnection connection = null;
@@ -27,7 +27,7 @@ public class TrueFXSpout extends BaseRichSpout {
 	String line = null;
 	URL serverAddress = null;
 
-	public TrueFXSpout(Integer wait_ms) {
+	public TrueFXTickSpout(Integer wait_ms) {
 		wait = wait_ms;
 	}
 
@@ -47,7 +47,6 @@ public class TrueFXSpout extends BaseRichSpout {
 			connection = null;
 			connection = (HttpURLConnection) serverAddress.openConnection();
 			connection.setRequestMethod("GET");
-		//	connection.setReadTimeout(500);
 			connection.connect();
 			rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			data = rd.readLine();
@@ -81,7 +80,6 @@ public class TrueFXSpout extends BaseRichSpout {
 			valueStr = data;
 			
 			List<String> pairs = parseIt(valueStr, 7, pairCount);
-
 			valueStr = valueStr.substring(pairCount * 7);
 
 			List<String> bidBigNumber = parseIt(valueStr, 4, pairCount);

@@ -115,6 +115,9 @@ public class STOCHBolt extends BaseRichBolt {
 
         }
 		
+    	if (pair.equals("EUR/USD"))
+			System.out.println(pair + " stoch:" + k + " " +  sma);
+
         // emit
    		_collector.emit(new Values(pair, timeslice, k, sma));
 

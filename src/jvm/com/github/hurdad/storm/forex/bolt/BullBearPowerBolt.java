@@ -69,9 +69,6 @@ public class BullBearPowerBolt extends BaseRichBolt {
 				}
 				Double sma = sum / _period;
 
-				// emit
-				_collector.emit(new Values(pair, timeslice, sma));
-
 				// save
 				_prev_emas.put(pair, sma);
 
@@ -80,16 +77,18 @@ public class BullBearPowerBolt extends BaseRichBolt {
 				// calc ema
 				Double ema = (close - _prev_emas.get(pair)) * _smoothing_constant
 						+ _prev_emas.get(pair);
-				ema = Math.round(ema * 100000) / 100000.0d;
 		
 				// save
 				_prev_emas.put(pair, ema);
 			}
 
-		   //calc bull bear power
-            Double bull_power = high - _prev_emas.get(pair);
-            Double bear_power = low -  _prev_emas.get(pair);
-            Double diff = bull_power - bear_power;
+			//calc bull bear power
+			Double bull_power = high - _prev_emas.get(pair);
+			Double bear_power = low -  _prev_emas.get(pair);
+			Double diff = bull_power - bear_power;
+			
+			if (pair.equals("EUR/USD"))
+				System.out.println(pair + " bbp:" +  diff);
 			
 			// emit
 			_collector.emit(new Values(pair, timeslice, diff));
