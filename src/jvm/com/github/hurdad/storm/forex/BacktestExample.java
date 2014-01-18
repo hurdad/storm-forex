@@ -29,7 +29,7 @@ public class BacktestExample {
 
 		// technical analysis
 		builder.setBolt("rsi_14", new RSIBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
-		builder.setBolt("atr_14", new ATRBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
+	//	builder.setBolt("atr_14", new ATRBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
 		builder.setBolt("adx_14", new ADXBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
 		builder.setBolt("bbp_13", new BullBearPowerBolt(13), 2).fieldsGrouping("ohlc_60",
 				new Fields("pair"));
@@ -46,7 +46,7 @@ public class BacktestExample {
 				.fieldsGrouping("rsi_14", new Fields("pair", "timeslice"));
 
 		Config conf = new Config();
-		// conf.setDebug(true);
+		//conf.setDebug(true);
 
 		if (args != null && args.length > 0) {
 			conf.setNumWorkers(3);

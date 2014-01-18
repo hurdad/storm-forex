@@ -26,13 +26,13 @@ public class SummaryBolt extends BaseRichBolt {
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 		
 		
-		Double val = tuple.getDouble(3);
-		List<String> f = tuple.getFields().toList();
+		//Double val = tuple.getDouble(3);
+	//	List<String> f = tuple.getFields().toList();
 		
 	
 		
-		if(pair.equals("EUR/USD"))
-			System.out.println(pair + " " + timeslice + " " + val + " " + f.get(1));
+	//	if(pair.equals("EUR/USD"))
+		//	System.out.println(pair + " " + timeslice + " " + val + " " + f.get(1));
 
 	}
 

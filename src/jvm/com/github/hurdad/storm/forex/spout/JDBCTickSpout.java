@@ -40,8 +40,7 @@ public class JDBCTickSpout extends BaseRichSpout {
 			Class.forName(_jdbc_driver);
 			conn = DriverManager.getConnection(_jdbc_url, _username, _password);
 			stmt = conn.createStatement();
-			String sql;
-			sql = "SELECT pair, bid, offer, timestamp FROM ticks ORDER BY timestamp DESC";
+			String sql= "SELECT pair, bid, offer, ROUND(unix_timestamp(ts) * 1000) as timestamp, ts FROM quotes ORDER BY ts ASC  LIMIT 300000 ";
 			ResultSet rs = stmt.executeQuery(sql);
 
 			//loop
@@ -50,7 +49,7 @@ public class JDBCTickSpout extends BaseRichSpout {
 				String pair = rs.getString("pair");
 				Double bid = rs.getDouble("bid");
 				Double offer = rs.getDouble("offer");
-				Integer timestamp = rs.getInt("timestamp");
+				Long timestamp = rs.getLong("timestamp");
 
 				//emit
 				_collector.emit(new Values(pair, bid, offer, timestamp));

@@ -55,7 +55,7 @@ public class ATRBolt extends BaseRichBolt {
 
 			// sum first TRs for first ATR avg
 			if (_counter <= _period) {
-				if (_tr_sums.get(pair) != null) {
+				if (_tr_sums.get(pair) == null) {
 					_tr_sums.put(pair, tr);
 				} else {
 					Double sum = _tr_sums.get(pair);
