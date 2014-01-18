@@ -93,7 +93,7 @@ public class RSIBolt extends BaseRichBolt {
 			}
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(pair + " rsi:" + rsi + " " + timeslice);
+				System.out.println(timeslice + " rsi:" + rsi );
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, rsi));

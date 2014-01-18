@@ -82,6 +82,9 @@ public class PercRBolt extends BaseRichBolt {
 			//calc percent R
             Double perc_r  = (h - close) / ( h - l)  * -100;
             
+            if (pair.equals("EUR/USD"))
+				System.out.println(timeslice + " perc_r:" +  perc_r);
+            
             // emit
        		_collector.emit(new Values(pair, timeslice, perc_r));
        		

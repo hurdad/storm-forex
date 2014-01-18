@@ -81,7 +81,7 @@ public class EMABolt extends BaseRichBolt {
 				ema = Math.round(ema * 100000) / 100000.0d;
 
 				if (pair.equals("EUR/USD"))
-					System.out.println(pair + " ema:" + ema + " " + timeslice);
+					System.out.println(timeslice + " ema:" + ema );
 
 				// emit
 				_collector.emit(new Values(pair, timeslice, ema));

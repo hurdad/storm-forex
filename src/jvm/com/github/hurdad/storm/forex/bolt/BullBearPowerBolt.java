@@ -88,7 +88,7 @@ public class BullBearPowerBolt extends BaseRichBolt {
 			Double diff = bull_power - bear_power;
 			
 			if (pair.equals("EUR/USD"))
-				System.out.println(pair + " bbp:" +  diff);
+				System.out.println(timeslice + " bbp:" +  diff);
 			
 			// emit
 			_collector.emit(new Values(pair, timeslice, diff));

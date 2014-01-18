@@ -62,7 +62,7 @@ public class SMABolt extends BaseRichBolt {
 			sma = Math.round(sma * 100000) / 100000.0d;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(pair + " sma:" + sma + " " + timeslice);
+				System.out.println(timeslice + " sma:" + sma );
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, sma));

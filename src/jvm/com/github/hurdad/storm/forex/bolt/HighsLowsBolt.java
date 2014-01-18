@@ -85,7 +85,7 @@ public class HighsLowsBolt extends BaseRichBolt {
 			Double high_low = highs_sma / lows_sma - 1;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(pair + " highslows:" +  high_low);
+				System.out.println(timeslice + " highslows:" +  high_low);
 			
 			// emit
 			_collector.emit(new Values(pair, timeslice, high_low));

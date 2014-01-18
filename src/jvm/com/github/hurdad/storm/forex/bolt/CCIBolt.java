@@ -76,6 +76,9 @@ public class CCIBolt extends BaseRichBolt {
 			//calc cci
 			Double cci = (tp - tp_sma) / (0.015 * mean_dev);
 			
+			if (pair.equals("EUR/USD"))
+				System.out.println(timeslice + " cci:" +  cci);
+			
 			// emit
 			_collector.emit(new Values(pair, timeslice, cci));
                  
