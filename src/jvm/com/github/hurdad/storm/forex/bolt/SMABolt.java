@@ -16,7 +16,7 @@ import backtype.storm.tuple.Values;
 public class SMABolt extends BaseRichBolt {
 	OutputCollector _collector;
 	Integer _period;
-	Map<String, Queue<Double>> _queues;
+	Map<String, Queue<Double>> _close_queues;
 
 	public SMABolt(Integer period) {
 		_period = period;
@@ -25,7 +25,7 @@ public class SMABolt extends BaseRichBolt {
 	@Override
 	public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 		_collector = collector;
-		_queues = new HashMap<String, Queue<Double>>();
+		_close_queues = new HashMap<String, Queue<Double>>();
 	}
 
 	@Override
@@ -37,14 +37,18 @@ public class SMABolt extends BaseRichBolt {
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
-		if (_queues.get(pair) == null)
-			_queues.put(pair, new LinkedList<Double>());
+		if (_close_queues.get(pair) == null)
+			_close_queues.put(pair, new LinkedList<Double>());
 
 		// get queue for pair
-		Queue<Double> q = _queues.get(pair);
+		Queue<Double> q = _close_queues.get(pair);
 
 		// push close price onto queue
 		q.add(close);
+		
+		//pop back if too long
+		if(q.size() > _period)
+			q.poll();
 
 		// check if we have enough data to calc sma
 		if (q.size() >= _period) {
@@ -63,8 +67,6 @@ public class SMABolt extends BaseRichBolt {
 			// emit
 			_collector.emit(new Values(pair, timeslice, sma));
 
-			// pop last item queue
-			q.poll();
 		}
 
 		// save
