@@ -47,9 +47,9 @@ public class ATRBolt extends BaseRichBolt {
 		// init
 		if (_true_ranges.get(pair) == null)
 			_true_ranges.put(pair, new LinkedList<Double>());
-		
+
 		Queue<Double> true_ranges = _true_ranges.get(pair);
-		
+
 		Double tr = null;
 		Double high_minus_low = high - low;
 
@@ -63,7 +63,7 @@ public class ATRBolt extends BaseRichBolt {
 
 			// add to front
 			true_ranges.add(tr);
-					
+
 			// pop back if too long
 			if (true_ranges.size() > _period)
 				true_ranges.poll();
@@ -77,13 +77,14 @@ public class ATRBolt extends BaseRichBolt {
 			for (Double val : true_ranges) {
 				sum_true_range = sum_true_range + val;
 			}
-			
+
 			// calc first
 			Double atr = sum_true_range / _period;
+			atr = Math.round(atr * 100) / 100.0d;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " atr:" +  atr);
-			
+				System.out.println(timeslice + " atr:" + atr);
+
 			// emit
 			_collector.emit(new Values(pair, timeslice, atr));
 
@@ -96,10 +97,11 @@ public class ATRBolt extends BaseRichBolt {
 
 			// calc atr
 			Double atr = ((_prev_atrs.get(pair) * (_period - 1)) + tr) / _period;
+			atr = Math.round(atr * 100) / 100.0d;
 
-	    	if (pair.equals("EUR/USD"))
-	    		System.out.println(timeslice + " atr:" +  atr);
-			
+			if (pair.equals("EUR/USD"))
+				System.out.println(timeslice + " atr:" + atr);
+
 			// emit
 			_collector.emit(new Values(pair, timeslice, atr));
 

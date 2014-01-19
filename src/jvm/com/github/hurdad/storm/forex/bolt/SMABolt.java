@@ -45,9 +45,9 @@ public class SMABolt extends BaseRichBolt {
 
 		// push close price onto queue
 		q.add(close);
-		
-		//pop back if too long
-		if(q.size() > _period)
+
+		// pop back if too long
+		if (q.size() > _period)
 			q.poll();
 
 		// check if we have enough data to calc sma
@@ -62,7 +62,7 @@ public class SMABolt extends BaseRichBolt {
 			sma = Math.round(sma * 100000) / 100000.0d;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " sma:" + sma );
+				System.out.println(timeslice + " sma:" + sma);
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, sma));

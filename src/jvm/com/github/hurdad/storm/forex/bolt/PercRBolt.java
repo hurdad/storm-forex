@@ -46,7 +46,7 @@ public class PercRBolt extends BaseRichBolt {
 
 		if (_low_queues.get(pair) == null)
 			_low_queues.put(pair, new LinkedList<Double>());
-		
+
 		// pair highs / lows
 		Queue<Double> highs = _high_queues.get(pair);
 		Queue<Double> lows = _low_queues.get(pair);
@@ -61,37 +61,38 @@ public class PercRBolt extends BaseRichBolt {
 
 		if (lows.size() > _period)
 			lows.poll();
-		
-		//have enough data to calc perc r
+
+		// have enough data to calc perc r
 		if (highs.size() == _period) {
-			
-			//get high
+
+			// get high
 			Double h = highs.peek();
 			// loop highs
 			for (Double val : highs) {
 				h = Math.max(val, h);
 			}
 
-			//get low
+			// get low
 			Double l = lows.peek();
 			// loop lows
 			for (Double val : lows) {
 				l = Math.min(val, l);
 			}
-		
-			//calc percent R
-            Double perc_r  = (h - close) / ( h - l)  * -100;
-            
-            if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " perc_r:" +  perc_r);
-            
-            // emit
-       		_collector.emit(new Values(pair, timeslice, perc_r));
-       		
+
+			// calc percent R
+			Double perc_r = (h - close) / (h - l) * -100;
+			perc_r = Math.round(perc_r * 100) / 100.0d;
+
+			if (pair.equals("EUR/USD"))
+				System.out.println(timeslice + " perc_r:" + perc_r);
+
+			// emit
+			_collector.emit(new Values(pair, timeslice, perc_r));
+
 		}
-		
-		//save
-   		_high_queues.put(pair, highs);
+
+		// save
+		_high_queues.put(pair, highs);
 		_low_queues.put(pair, lows);
 
 	}

@@ -150,6 +150,7 @@ public class UOBolt extends BaseRichBolt {
 
 			// calc Ulitimate Oscillator
 			Double uo = 100 * ((4 * avg_1) + (2 * avg_2) + avg_3) / (4 + 2 + 1);
+			uo = Math.round(uo * 100) / 100.0d;
 
 			if (pair.equals("EUR/USD"))
 				System.out.println(timeslice + " uo:" + uo);

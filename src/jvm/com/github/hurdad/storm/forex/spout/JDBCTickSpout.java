@@ -11,7 +11,6 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 
-
 public class JDBCTickSpout extends BaseRichSpout {
 	SpoutOutputCollector _collector;
 	String _jdbc_driver;
@@ -40,25 +39,24 @@ public class JDBCTickSpout extends BaseRichSpout {
 			Class.forName(_jdbc_driver);
 			conn = DriverManager.getConnection(_jdbc_url, _username, _password);
 			stmt = conn.createStatement();
-			String sql= "SELECT pair, bid, offer, ROUND(unix_timestamp(ts) * 1000) as timestamp FROM quotes WHERE pair = 'EUR/USD' ORDER BY ts ASC LIMIT 0, 800000 ";
+			String sql = "SELECT pair, bid, offer, ROUND(unix_timestamp(ts) * 1000) as timestamp FROM quotes WHERE pair = 'EUR/USD' ORDER BY ts ASC LIMIT 0, 800000 ";
 			ResultSet rs = stmt.executeQuery(sql);
 
-			//loop
+			// loop
 			while (rs.next()) {
-				
+
 				String pair = rs.getString("pair");
 				Double bid = rs.getDouble("bid");
 				Double offer = rs.getDouble("offer");
 				Long timestamp = rs.getLong("timestamp");
 
-				//emit
+				// emit
 				_collector.emit(new Values(pair, bid, offer, timestamp));
-				
 
-				Utils.sleep(10);// wait
+				//Utils.sleep(5);// wait
 			}
 			System.out.print("Query Finished");
-			
+
 			rs.close();
 			stmt.close();
 			conn.close();
@@ -79,8 +77,8 @@ public class JDBCTickSpout extends BaseRichSpout {
 				se.printStackTrace();
 			}
 		}
-		
-		while(true)
+
+		while (true)
 			Utils.sleep(1000);// wait
 	}
 

@@ -20,7 +20,7 @@ public class BacktestExample {
 				"jdbc:mysql://127.0.0.1/forex", "forex", "forex"), 1);
 
 		// one minute candles
-		builder.setBolt("ohlc_60", new OHLCBolt(1 * 60), 1).fieldsGrouping("jdbc",
+		builder.setBolt("ohlc_60", new OHLCBolt(5 * 60), 1).fieldsGrouping("jdbc",
 				new Fields("pair"));
 
 		// moving averages
@@ -41,8 +41,6 @@ public class BacktestExample {
 		builder.setBolt("roc_12", new ROCBolt(12), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
 		builder.setBolt("rsi_14", new RSIBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
 		builder.setBolt("stoch_14_3", new STOCHBolt(14, 3), 2).fieldsGrouping("ohlc_60",
-				new Fields("pair"));
-		builder.setBolt("stochrsi_14", new STOCHRSIBolt(14), 2).fieldsGrouping("ohlc_60",
 				new Fields("pair"));
 		builder.setBolt("uo_7)14_28", new UOBolt(7, 14, 28), 2).fieldsGrouping("ohlc_60",
 				new Fields("pair"));

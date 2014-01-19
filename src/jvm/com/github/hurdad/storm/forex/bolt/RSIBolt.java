@@ -54,9 +54,9 @@ public class RSIBolt extends BaseRichBolt {
 
 			// add to front
 			q.add(change);
-			
-			//pop back if too long
-			if(q.size() > _period)
+
+			// pop back if too long
+			if (q.size() > _period)
 				q.poll();
 
 		}
@@ -93,7 +93,7 @@ public class RSIBolt extends BaseRichBolt {
 			}
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " rsi:" + rsi );
+				System.out.println(timeslice + " rsi:" + rsi);
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, rsi));

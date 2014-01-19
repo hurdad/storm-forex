@@ -18,7 +18,6 @@ public class HighsLowsBolt extends BaseRichBolt {
 	Integer _period;
 	Map<String, Queue<Double>> _high_queues;
 	Map<String, Queue<Double>> _low_queues;
-	
 
 	public HighsLowsBolt(Integer period) {
 		_period = period;
@@ -71,28 +70,27 @@ public class HighsLowsBolt extends BaseRichBolt {
 				lows_sum = lows_sum + val;
 			}
 			Double lows_sma = lows_sum / _period;
-			lows_sma = Math.round(lows_sma * 100000) / 100000.0d;
 
 			// calc sma high
 			Double highs_sum = 0d;
-			for (Double val : lows) {
+			for (Double val : highs) {
 				highs_sum = highs_sum + val;
 			}
 			Double highs_sma = highs_sum / _period;
-			highs_sma = Math.round(highs_sma * 100000) / 100000.0d;
 
 			// calc highs/lows
 			Double high_low = highs_sma / lows_sma - 1;
+			//high_low = Math.round(high_low * 100000) / 100000.0d;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " highslows:" +  high_low);
-			
+				System.out.println(timeslice + " highslows:" + high_low);
+
 			// emit
 			_collector.emit(new Values(pair, timeslice, high_low));
 		}
 
-		//save
-   		_high_queues.put(pair, highs);
+		// save
+		_high_queues.put(pair, highs);
 		_low_queues.put(pair, lows);
 	}
 

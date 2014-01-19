@@ -41,7 +41,7 @@ public class BullBearPowerBolt extends BaseRichBolt {
 		Double low = tuple.getDoubleByField("low");
 		Double close = tuple.getDoubleByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
-		
+
 		// init
 		if (_close_queues.get(pair) == null)
 			_close_queues.put(pair, new LinkedList<Double>());
@@ -52,10 +52,10 @@ public class BullBearPowerBolt extends BaseRichBolt {
 		// push close price onto queue
 		q.add(close);
 
-		//pop back if too long
-		if(q.size() > _period)
+		// pop back if too long
+		if (q.size() > _period)
 			q.poll();
-		
+
 		// check if we have enough data to calc ema
 		if (q.size() == _period) {
 
@@ -77,19 +77,20 @@ public class BullBearPowerBolt extends BaseRichBolt {
 				// calc ema
 				Double ema = (close - _prev_emas.get(pair)) * _smoothing_constant
 						+ _prev_emas.get(pair);
-		
+
 				// save
 				_prev_emas.put(pair, ema);
 			}
 
-			//calc bull bear power
+			// calc bull bear power
 			Double bull_power = high - _prev_emas.get(pair);
-			Double bear_power = low -  _prev_emas.get(pair);
+			Double bear_power = low - _prev_emas.get(pair);
 			Double diff = bull_power - bear_power;
-			
+			diff = Math.round(diff * 100) / 100.0d;
+
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " bbp:" +  diff);
-			
+				System.out.println(timeslice + " bbp:" + diff);
+
 			// emit
 			_collector.emit(new Values(pair, timeslice, diff));
 		}

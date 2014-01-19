@@ -44,19 +44,19 @@ public class STOCHBolt extends BaseRichBolt {
 		Double low = tuple.getDoubleByField("low");
 		Double close = tuple.getDoubleByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
-		
+
 		Double k = null, sma = null;
-		
+
 		// init
 		if (_high_queues.get(pair) == null)
 			_high_queues.put(pair, new LinkedList<Double>());
-		
+
 		if (_low_queues.get(pair) == null)
 			_low_queues.put(pair, new LinkedList<Double>());
 
 		if (_k_queues.get(pair) == null)
 			_k_queues.put(pair, new LinkedList<Double>());
-		
+
 		// pair highs / lows
 		Queue<Double> highs = _high_queues.get(pair);
 		Queue<Double> lows = _low_queues.get(pair);
@@ -65,64 +65,67 @@ public class STOCHBolt extends BaseRichBolt {
 		// add to front
 		highs.add(high);
 		lows.add(low);
-		
-		 //pop back if too long
-		if(highs.size() > _period)
+
+		// pop back if too long
+		if (highs.size() > _period)
 			highs.poll();
-		
-		if(lows.size() > _period)
+
+		if (lows.size() > _period)
 			lows.poll();
 
-		//have enough data to calc stoch
+		// have enough data to calc stoch
 		if (highs.size() == _period) {
-			
-			//get high
+
+			// get high
 			Double h = highs.peek();
 			// loop highs
 			for (Double val : highs) {
 				h = Math.max(val, h);
 			}
 
-			//get low
+			// get low
 			Double l = lows.peek();
 			// loop lows
 			for (Double val : lows) {
 				l = Math.min(val, l);
 			}
-			
-			//calc
-            k  = (close - l) / ( h - l) * 100;
-            
-    		// add to front
-    		ks.add(k);
-            
-            //pop back if too long
-            if(ks.size() > _sma_period)
-                    ks.poll();
-			
+
+			// calc
+			k = (close - l) / (h - l) * 100;
+			k = Math.round(k * 100) / 100.0d;
+
+			// add to front
+			ks.add(k);
+
+			// pop back if too long
+			if (ks.size() > _sma_period)
+				ks.poll();
+
 		}
-		
-		//have enough data to calc sma
-        if(ks.size() == _sma_period){
-        
-        	 //k moving average 
+
+		// have enough data to calc sma
+		if (ks.size() == _sma_period) {
+
+			// k moving average
 			Double sum = 0d;
 			for (Double val : ks) {
 				sum = sum + val;
 			}
 			sma = sum / _sma_period;
-			sma = Math.round(sma * 100000) / 100000.0d;
+			sma = Math.round(sma * 100) / 100.0d;
 
-        }
-		
-    	if (pair.equals("EUR/USD"))
-			System.out.println(timeslice + " stoch:" + k + " " +  sma);
+		}
 
-        // emit
-   		_collector.emit(new Values(pair, timeslice, k, sma));
+		if(k != null){
+			if (pair.equals("EUR/USD"))
+				System.out.println(timeslice + " stoch:" + k + " " + sma);
+	
+			// emit
+			_collector.emit(new Values(pair, timeslice, k, sma));
+		}
 
-   		//save
-   		_high_queues.put(pair, highs);
+		// save
+		_high_queues.put(pair, highs);
 		_low_queues.put(pair, lows);
 		_k_queues.put(pair, ks);
 	}

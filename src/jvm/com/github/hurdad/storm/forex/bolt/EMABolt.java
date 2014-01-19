@@ -49,9 +49,9 @@ public class EMABolt extends BaseRichBolt {
 
 		// push close price onto queue
 		q.add(close);
-		
-		//pop back if too long
-		if(q.size() > _period)
+
+		// pop back if too long
+		if (q.size() > _period)
 			q.poll();
 
 		// check if we have enough data to calc ema
@@ -81,7 +81,7 @@ public class EMABolt extends BaseRichBolt {
 				ema = Math.round(ema * 100000) / 100000.0d;
 
 				if (pair.equals("EUR/USD"))
-					System.out.println(timeslice + " ema:" + ema );
+					System.out.println(timeslice + " ema:" + ema);
 
 				// emit
 				_collector.emit(new Values(pair, timeslice, ema));

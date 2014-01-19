@@ -54,7 +54,7 @@ public class MACDBolt extends BaseRichBolt {
 		// init
 		if (_close_queues1.get(pair) == null)
 			_close_queues1.put(pair, new LinkedList<Double>());
-		
+
 		if (_close_queues2.get(pair) == null)
 			_close_queues2.put(pair, new LinkedList<Double>());
 
@@ -69,7 +69,7 @@ public class MACDBolt extends BaseRichBolt {
 		Double ema1_value = null;
 		Double ema2_value = null;
 		Double macd_line = null;
-		Double macd_line_sma  = null;
+		Double macd_line_sma = null;
 
 		// push close price onto queue
 		close1.add(close);
@@ -78,7 +78,7 @@ public class MACDBolt extends BaseRichBolt {
 		// pop back if too long
 		if (close1.size() > _ema1)
 			close1.poll();
-		
+
 		if (close2.size() > _ema2)
 			close2.poll();
 
@@ -145,6 +145,7 @@ public class MACDBolt extends BaseRichBolt {
 		if (ema1_value != null && ema2_value != null) {
 
 			macd_line = ema1_value - ema2_value;
+			macd_line = Math.round(macd_line * 100) / 100.0d;
 
 			// add to front
 			macd.add(macd_line);
@@ -164,18 +165,19 @@ public class MACDBolt extends BaseRichBolt {
 				sum = sum + val;
 			}
 			macd_line_sma = sum / _signal;
+			macd_line_sma = Math.round(macd_line_sma * 100) / 100.0d;
 
 		}
 
-		if(macd_line != null){
-			
+		if (macd_line != null) {
+
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " macd:" +  macd_line + " " + macd_line_sma);
-			
+				System.out.println(timeslice + " macd:" + macd_line + " " + macd_line_sma);
+
 			// emit
 			_collector.emit(new Values(pair, timeslice, macd_line, macd_line_sma));
 		}
-		
+
 		// save
 		_close_queues1.put(pair, close1);
 		_close_queues2.put(pair, close2);
