@@ -20,7 +20,7 @@ public class BacktestExample {
 				"jdbc:mysql://127.0.0.1/forex", "forex", "forex"), 1);
 
 		// one minute candles
-		builder.setBolt("ohlc_60", new OHLCBolt(5 * 60), 1).fieldsGrouping("jdbc",
+		builder.setBolt("ohlc_60", new OHLCBolt(1 * 60), 1).fieldsGrouping("jdbc",
 				new Fields("pair"));
 
 		// moving averages

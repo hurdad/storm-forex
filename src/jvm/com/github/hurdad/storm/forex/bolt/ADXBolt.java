@@ -33,10 +33,14 @@ public class ADXBolt extends BaseRichBolt {
 	@Override
 	public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 		_collector = collector;
+		_prev_closes = new HashMap<String, Double>();
+		_prev_highs = new HashMap<String, Double>();
+		_prev_lows = new HashMap<String, Double>();
 		_true_ranges = new HashMap<String, Queue<Double>>();
 		_plus_dms = new HashMap<String, Queue<Double>>();
 		_minus_dms = new HashMap<String, Queue<Double>>();
 		_dxs = new HashMap<String, Queue<Double>>();
+		_prev_adxs = new HashMap<String, Double>();
 	}
 
 	@Override

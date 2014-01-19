@@ -29,7 +29,6 @@ public class MACDBolt extends BaseRichBolt {
 		_signal = signal;
 		_smoothing_constant_1 = (double) (2 / (ema1 + 1));
 		_smoothing_constant_2 = (double) (2 / (ema2 + 1));
-
 	}
 
 	@Override
@@ -169,6 +168,10 @@ public class MACDBolt extends BaseRichBolt {
 		}
 
 		if(macd_line != null){
+			
+			if (pair.equals("EUR/USD"))
+				System.out.println(timeslice + " macd:" +  macd_line + " " + macd_line_sma);
+			
 			// emit
 			_collector.emit(new Values(pair, timeslice, macd_line, macd_line_sma));
 		}

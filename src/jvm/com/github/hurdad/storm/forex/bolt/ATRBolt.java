@@ -1,7 +1,9 @@
 package com.github.hurdad.storm.forex.bolt;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -16,7 +18,7 @@ public class ATRBolt extends BaseRichBolt {
 	Integer _period;
 	Map<String, Double> _prev_closes;
 	Map<String, Double> _prev_atrs;
-	Map<String, Double> _tr_sums;
+	Map<String, Queue<Double>> _true_ranges;
 	Integer _counter;
 
 	public ATRBolt(Integer period) {
@@ -28,7 +30,7 @@ public class ATRBolt extends BaseRichBolt {
 		_collector = collector;
 		_prev_closes = new HashMap<String, Double>();
 		_prev_atrs = new HashMap<String, Double>();
-		_tr_sums = new HashMap<String, Double>();
+		_true_ranges = new HashMap<String, Queue<Double>>();
 		_counter = 0;
 	}
 
@@ -42,6 +44,12 @@ public class ATRBolt extends BaseRichBolt {
 		Double close = tuple.getDoubleByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
+		// init
+		if (_true_ranges.get(pair) == null)
+			_true_ranges.put(pair, new LinkedList<Double>());
+		
+		Queue<Double> true_ranges = _true_ranges.get(pair);
+		
 		Double tr = null;
 		Double high_minus_low = high - low;
 
@@ -53,44 +61,45 @@ public class ATRBolt extends BaseRichBolt {
 			// calc tr
 			tr = Math.max(high_minus_low, Math.max(high_minus_close_past, low_minus_close_past));
 
-			// sum first TRs for first ATR avg
-			if (_counter <= _period) {
-				if (_tr_sums.get(pair) == null) {
-					_tr_sums.put(pair, tr);
-				} else {
-					Double sum = _tr_sums.get(pair);
-					sum += tr;
-					_tr_sums.put(pair, sum);
-				}
-			}
+			// add to front
+			true_ranges.add(tr);
+					
+			// pop back if too long
+			if (true_ranges.size() > _period)
+				true_ranges.poll();
 		}
 
 		// first ATR
-		if (_counter == _period) {
+		if (_prev_atrs.get(pair) == null && true_ranges.size() == _period) {
 
+			// tr sum
+			Double sum_true_range = 0d;
+			for (Double val : true_ranges) {
+				sum_true_range = sum_true_range + val;
+			}
+			
 			// calc first
-			Double atr = _tr_sums.get(pair) / _period;
+			Double atr = sum_true_range / _period;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(pair + " atr:" +  atr);
+				System.out.println(timeslice + " atr:" +  atr);
 			
 			// emit
 			_collector.emit(new Values(pair, timeslice, atr));
 
 			// save
 			_prev_atrs.put(pair, atr);
-
 		}
 
 		// remaining ATR
-		if (_counter > _period) {
+		if (_prev_atrs.get(pair) != null) {
 
 			// calc atr
 			Double atr = ((_prev_atrs.get(pair) * (_period - 1)) + tr) / _period;
 
 	    	if (pair.equals("EUR/USD"))
-				System.out.println(pair + " atr:" +  atr);
-	    	
+	    		System.out.println(timeslice + " atr:" +  atr);
+			
 			// emit
 			_collector.emit(new Values(pair, timeslice, atr));
 
@@ -99,10 +108,9 @@ public class ATRBolt extends BaseRichBolt {
 		}
 
 		// save
+		_true_ranges.put(pair, true_ranges);
 		_prev_closes.put(pair, close);
 
-		// incrs
-		_counter++;
 	}
 
 	@Override
