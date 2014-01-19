@@ -20,7 +20,7 @@ public class UOBolt extends BaseRichBolt {
 	Map<String, Double> _prev_closes;
 	Map<String, Queue<Double>> _buying_pressure1, _buying_pressure2, _buying_pressure3;
 	Map<String, Queue<Double>> _true_ranges1, _true_ranges2, _true_ranges3;
-	
+
 	public UOBolt(Integer period1, Integer period2, Integer period3) {
 		_period1 = period1;
 		_period2 = period2;
@@ -48,7 +48,7 @@ public class UOBolt extends BaseRichBolt {
 		Double low = tuple.getDoubleByField("low");
 		Double close = tuple.getDoubleByField("low");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
-		
+
 		// init
 		if (_buying_pressure1.get(pair) == null)
 			_buying_pressure1.put(pair, new LinkedList<Double>());
@@ -63,26 +63,25 @@ public class UOBolt extends BaseRichBolt {
 		if (_true_ranges3.get(pair) == null)
 			_true_ranges3.put(pair, new LinkedList<Double>());
 
-		//queues
+		// queues
 		Queue<Double> bp1 = _buying_pressure1.get(pair);
 		Queue<Double> bp2 = _buying_pressure1.get(pair);
 		Queue<Double> bp3 = _buying_pressure1.get(pair);
 		Queue<Double> tr1 = _true_ranges1.get(pair);
 		Queue<Double> tr2 = _true_ranges2.get(pair);
 		Queue<Double> tr3 = _true_ranges3.get(pair);
-		
-		
+
 		// need 2 data points
-		if (_prev_closes.get(pair) != null){
-			
-		    //calc buying pressure
-            Double buying_pressure = close - Math.min(low, _prev_closes.get(pair));      
-            
-        	// add to front
+		if (_prev_closes.get(pair) != null) {
+
+			// calc buying pressure
+			Double buying_pressure = close - Math.min(low, _prev_closes.get(pair));
+
+			// add to front
 			bp1.add(buying_pressure);
 			bp2.add(buying_pressure);
 			bp3.add(buying_pressure);
-			
+
 			// pop back if too long
 			if (bp1.size() > _period1)
 				bp1.poll();
@@ -90,41 +89,42 @@ public class UOBolt extends BaseRichBolt {
 				bp2.poll();
 			if (bp3.size() > _period3)
 				bp3.poll();
-			
-            //calc true range
-            Double tr = Math.max(high, _prev_closes.get(pair) ) - Math.min(low, _prev_closes.get(pair));
-            
-            // add to front
- 			tr1.add(tr);
- 			tr2.add(tr);
- 			tr3.add(tr);
- 			
- 			// pop back if too long
- 			if (tr1.size() > _period1)
- 				tr1.poll();
- 			if (tr2.size() > _period2)
- 				tr2.poll();
- 			if (tr3.size() > _period3)
- 				tr3.poll();  
-		}
-			
-	     //calc Ultimate
-        if(tr3.size() == _period3 && bp3.size() == _period3){
 
-        	Double sum_true_range_1 = 0d;
+			// calc true range
+			Double tr = Math.max(high, _prev_closes.get(pair))
+					- Math.min(low, _prev_closes.get(pair));
+
+			// add to front
+			tr1.add(tr);
+			tr2.add(tr);
+			tr3.add(tr);
+
+			// pop back if too long
+			if (tr1.size() > _period1)
+				tr1.poll();
+			if (tr2.size() > _period2)
+				tr2.poll();
+			if (tr3.size() > _period3)
+				tr3.poll();
+		}
+
+		// calc Ultimate
+		if (tr3.size() == _period3 && bp3.size() == _period3) {
+
+			Double sum_true_range_1 = 0d;
 			for (Double val : tr1) {
 				sum_true_range_1 += val;
 			}
-			
+
 			Double sum_buying_pressure_1 = 0d;
 			for (Double val : bp1) {
 				sum_buying_pressure_1 += val;
 			}
-			
-			//calc avg of period1
-            Double avg_1 = sum_buying_pressure_1 / sum_true_range_1;
 
-            Double sum_true_range_2 = 0d;
+			// calc avg of period1
+			Double avg_1 = sum_buying_pressure_1 / sum_true_range_1;
+
+			Double sum_true_range_2 = 0d;
 			for (Double val : tr2) {
 				sum_true_range_2 += val;
 			}
@@ -133,39 +133,39 @@ public class UOBolt extends BaseRichBolt {
 				sum_buying_pressure_2 += val;
 			}
 
-            //calc average period2
-            Double avg_2 = sum_buying_pressure_2 / sum_true_range_2;
-            
-            Double sum_true_range_3 = 0d;
+			// calc average period2
+			Double avg_2 = sum_buying_pressure_2 / sum_true_range_2;
+
+			Double sum_true_range_3 = 0d;
 			for (Double val : tr3) {
 				sum_true_range_3 += val;
 			}
 			Double sum_buying_pressure_3 = 0d;
 			for (Double val : bp3) {
 				sum_buying_pressure_3 += val;
-			} 
+			}
 
-            //calc avg_28
-            Double avg_3 = sum_buying_pressure_3 / sum_true_range_3;
+			// calc avg_28
+			Double avg_3 = sum_buying_pressure_3 / sum_true_range_3;
 
-            //calc Ulitimate Oscillator
-            Double uo = 100 * (( 4 * avg_1) + ( 2 * avg_2) + avg_3) / (4 + 2 + 1);
+			// calc Ulitimate Oscillator
+			Double uo = 100 * ((4 * avg_1) + (2 * avg_2) + avg_3) / (4 + 2 + 1);
 
-            if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " uo:" + uo );
+			if (pair.equals("EUR/USD"))
+				System.out.println(timeslice + " uo:" + uo);
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, uo));
-        }
-				
-        //save
-        _prev_closes.put(pair, close);
-        _buying_pressure1.put(pair, bp1);
+		}
+
+		// save
+		_prev_closes.put(pair, close);
+		_buying_pressure1.put(pair, bp1);
 		_buying_pressure2.put(pair, bp2);
 		_buying_pressure3.put(pair, bp3);
-		_true_ranges1.put(pair,  tr1);
-		_true_ranges2.put(pair,  tr2);
-		_true_ranges3.put(pair,  tr3);
+		_true_ranges1.put(pair, tr1);
+		_true_ranges2.put(pair, tr2);
+		_true_ranges3.put(pair, tr3);
 	}
 
 	@Override
