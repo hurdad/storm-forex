@@ -1,7 +1,5 @@
 package com.github.hurdad.storm.forex.bolt;
 
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -40,7 +40,7 @@ public class JDBCTickSpout extends BaseRichSpout {
 			Class.forName(_jdbc_driver);
 			conn = DriverManager.getConnection(_jdbc_url, _username, _password);
 			stmt = conn.createStatement();
-			String sql= "SELECT pair, bid, offer, ROUND(unix_timestamp(ts) * 1000) as timestamp FROM quotes WHERE pair = 'EUR/USD' ORDER BY ts ASC LIMIT 500000 ";
+			String sql= "SELECT pair, bid, offer, ROUND(unix_timestamp(ts) * 1000) as timestamp FROM quotes WHERE pair = 'EUR/USD' ORDER BY ts ASC LIMIT 500000, 50000 ";
 			ResultSet rs = stmt.executeQuery(sql);
 
 			//loop
