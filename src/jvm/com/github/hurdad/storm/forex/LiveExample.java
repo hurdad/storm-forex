@@ -27,30 +27,23 @@ public class LiveExample {
 		builder.setBolt("ema_5", new EMABolt(5), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
 
 		// technical analysis
-		builder.setBolt("adx_14", new ADXBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
-		builder.setBolt("atr_14", new ATRBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
-		builder.setBolt("bbp_13", new BullBearPowerBolt(13), 2).fieldsGrouping("ohlc_60",
+		builder.setBolt("adx_14", new ADXBolt(14), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("atr_14", new ATRBolt(14), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("bbp_13", new BullBearPowerBolt(13), 2).fieldsGrouping("ohlc_10",
 				new Fields("pair"));
-		builder.setBolt("cci_14", new CCIBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
-		builder.setBolt("hl_14", new HighsLowsBolt(14), 2).fieldsGrouping("ohlc_60",
+		builder.setBolt("cci_14", new CCIBolt(14), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("hl_14", new HighsLowsBolt(14), 2).fieldsGrouping("ohlc_10",
 				new Fields("pair"));
-		builder.setBolt("macd_12_26_9", new MACDBolt(12, 26, 9), 2).fieldsGrouping("ohlc_60",
+		builder.setBolt("macd_12_26_9", new MACDBolt(12, 26, 9), 2).fieldsGrouping("ohlc_10",
 				new Fields("pair"));
-		builder.setBolt("r_14", new PercRBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
-		builder.setBolt("roc_12", new ROCBolt(12), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
-		builder.setBolt("rsi_14", new RSIBolt(14), 2).fieldsGrouping("ohlc_60", new Fields("pair"));
-		builder.setBolt("stoch_14_3", new STOCHBolt(14, 3), 2).fieldsGrouping("ohlc_60",
+		builder.setBolt("r_14", new PercRBolt(14), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("roc_12", new ROCBolt(12), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("rsi_14", new RSIBolt(14), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
+		builder.setBolt("stoch_14_3", new STOCHBolt(14, 3), 2).fieldsGrouping("ohlc_10",
 				new Fields("pair"));
-		builder.setBolt("uo_7)14_28", new UOBolt(7, 14, 28), 2).fieldsGrouping("ohlc_60",
+		builder.setBolt("uo_7)14_28", new UOBolt(7, 14, 28), 2).fieldsGrouping("ohlc_10",
 				new Fields("pair"));
-		
-		/*
 
-		builder.setBolt("summary", new SummaryBolt(), 1)
-				.fieldsGrouping("sma_5", new Fields("pair", "timeslice"))
-				.fieldsGrouping("ema_5", new Fields("pair", "timeslice"))
-				.fieldsGrouping("rsi_5", new Fields("pair", "timeslice"));
-*/
 		Config conf = new Config();
 		// conf.setDebug(true);
 
@@ -61,7 +54,7 @@ public class LiveExample {
 
 			LocalCluster cluster = new LocalCluster();
 			cluster.submitTopology("forex", conf, builder.createTopology());
-			Utils.sleep(5 * 60 * 1000); //Run for 5 minutes
+			Utils.sleep(5 * 60 * 1000); // Run for 5 minutes
 			cluster.killTopology("forex");
 			cluster.shutdown();
 		}

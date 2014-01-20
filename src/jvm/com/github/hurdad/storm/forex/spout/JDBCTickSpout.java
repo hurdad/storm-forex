@@ -53,7 +53,7 @@ public class JDBCTickSpout extends BaseRichSpout {
 				// emit
 				_collector.emit(new Values(pair, bid, offer, timestamp));
 
-				//Utils.sleep(5);// wait
+				Utils.sleep(1);// wait
 			}
 			System.out.print("Query Finished");
 
