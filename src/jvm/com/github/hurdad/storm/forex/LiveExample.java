@@ -39,7 +39,9 @@ public class LiveExample {
 		builder.setBolt("r_14", new PercRBolt(14), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
 		builder.setBolt("roc_12", new ROCBolt(12), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
 		builder.setBolt("rsi_14", new RSIBolt(14), 2).fieldsGrouping("ohlc_10", new Fields("pair"));
-		builder.setBolt("stoch_14_3", new STOCHBolt(14, 3), 2).fieldsGrouping("ohlc_10",
+		builder.setBolt("stochrsi_14", new StochRSIBolt(14), 2).fieldsGrouping("ohlc_10",
+				new Fields("pair"));
+		builder.setBolt("stoch_14_3", new StochBolt(14, 3), 2).fieldsGrouping("ohlc_10",
 				new Fields("pair"));
 		builder.setBolt("uo_7)14_28", new UOBolt(7, 14, 28), 2).fieldsGrouping("ohlc_10",
 				new Fields("pair"));

@@ -14,7 +14,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-public class STOCHBolt extends BaseRichBolt {
+public class StochBolt extends BaseRichBolt {
 	OutputCollector _collector;
 	Integer _period;
 	Integer _sma_period;
@@ -22,7 +22,7 @@ public class STOCHBolt extends BaseRichBolt {
 	Map<String, Queue<Double>> _low_queues;
 	Map<String, Queue<Double>> _k_queues;
 
-	public STOCHBolt(Integer period, Integer sma_period) {
+	public StochBolt(Integer period, Integer sma_period) {
 		_period = period;
 		_sma_period = sma_period;
 	}
