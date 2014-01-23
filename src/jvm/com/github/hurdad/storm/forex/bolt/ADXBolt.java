@@ -157,12 +157,12 @@ public class ADXBolt extends BaseRichBolt {
 				sum = sum + val;
 			}
 			Double adx = sum / _period;
-
+			
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " adx:" + adx + " -di:" + minus_di + " +di:" + plus_di);
+				System.out.println(timeslice + " adx:" +  Math.round(adx * 100) / 100.0d + " -di:" + Math.round(minus_di * 100) / 100.0d + " +di:" +  Math.round(plus_di * 100) / 100.0d);
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, minus_di, plus_di, adx));
+			_collector.emit(new Values(pair, timeslice, Math.round(minus_di * 100) / 100.0d, Math.round(plus_di * 100) / 100.0d,  Math.round(adx * 100) / 100.0d));
 
 			// save
 			_prev_adxs.put(pair, adx);
@@ -175,10 +175,11 @@ public class ADXBolt extends BaseRichBolt {
 			Double adx = ((_prev_adxs.get(pair) * (_period - 1)) + dx1) / _period;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " adx:" + adx + " -di:" + minus_di + " +di:" + plus_di);
+				System.out.println(timeslice + " adx:" +  Math.round(adx * 100) / 100.0d + " -di:" + Math.round(minus_di * 100) / 100.0d + " +di:" +  Math.round(plus_di * 100) / 100.0d);
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, minus_di, plus_di, adx));
+			_collector.emit(new Values(pair, timeslice, Math.round(minus_di * 100) / 100.0d, Math.round(plus_di * 100) / 100.0d,  Math.round(adx * 100) / 100.0d));
+
 
 			// save
 			_prev_adxs.put(pair, adx);
