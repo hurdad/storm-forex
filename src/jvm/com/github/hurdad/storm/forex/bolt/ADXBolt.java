@@ -50,6 +50,7 @@ public class ADXBolt extends BaseRichBolt {
 		String pair = tuple.getStringByField("pair");
 		Double high = tuple.getDoubleByField("high");
 		Double low = tuple.getDoubleByField("low");
+		Double close = tuple.getDoubleByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
@@ -70,6 +71,9 @@ public class ADXBolt extends BaseRichBolt {
 		Queue<Double> plus_dms = _plus_dms.get(pair);
 		Queue<Double> minus_dms = _minus_dms.get(pair);
 		Queue<Double> dxs = _dxs.get(pair);
+		
+		Double plus_di = null;
+		Double minus_di = null;
 
 		// need 2 data points
 		if (_prev_closes.get(pair) != null && _prev_lows.get(pair) != null
@@ -119,18 +123,18 @@ public class ADXBolt extends BaseRichBolt {
 			// plus dm sum
 			Double sum_plus_dm = 0d;
 			for (Double val : plus_dms) {
-				sum_plus_dm = sum_true_range + val;
+				sum_plus_dm = sum_plus_dm + val;
 			}
 
-			// minux dm sum
+			// minus dm sum
 			Double sum_minus_dm = 0d;
 			for (Double val : minus_dms) {
-				sum_minus_dm = sum_true_range + val;
+				sum_minus_dm = sum_minus_dm + val;
 			}
 
 			// calc dx
-			Double plus_di = (sum_plus_dm / sum_true_range) * 100;
-			Double minus_di = (sum_minus_dm / sum_true_range) * 100;
+			plus_di = (sum_plus_dm / sum_true_range) * 100;
+			minus_di = (sum_minus_dm / sum_true_range) * 100;
 			Double di_diff = Math.abs(plus_di - minus_di);
 			Double di_sum = plus_di + minus_di;
 			dx1 = (di_diff / di_sum) * 100;
@@ -145,7 +149,7 @@ public class ADXBolt extends BaseRichBolt {
 		}
 
 		// calc first adx
-		if (dxs.size() == _period) {
+		if (dxs.size() == _period && _prev_adxs.get(pair) == null) {
 
 			// dx sum
 			Double sum = 0d;
@@ -155,10 +159,10 @@ public class ADXBolt extends BaseRichBolt {
 			Double adx = sum / _period;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " adx:" + adx);
+				System.out.println(timeslice + " adx:" + adx + " -di:" + minus_di + " +di:" + plus_di);
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, adx));
+			_collector.emit(new Values(pair, timeslice, minus_di, plus_di, adx));
 
 			// save
 			_prev_adxs.put(pair, adx);
@@ -166,22 +170,26 @@ public class ADXBolt extends BaseRichBolt {
 		}
 
 		// calc further adx
-		if (_prev_adxs.get(pair) != null) {
+		if (dxs.size() == _period && _prev_adxs.get(pair) != null) {
 
 			Double adx = ((_prev_adxs.get(pair) * (_period - 1)) + dx1) / _period;
 
 			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " adx:" + adx);
+				System.out.println(timeslice + " adx:" + adx + " -di:" + minus_di + " +di:" + plus_di);
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, adx));
+			_collector.emit(new Values(pair, timeslice, minus_di, plus_di, adx));
 
 			// save
 			_prev_adxs.put(pair, adx);
 		}
 
 		// save
+		_prev_closes.put(pair, close);
+		_prev_lows.put(pair, low);
+		_prev_highs.put(pair,  high);
 		_true_ranges.put(pair, true_ranges);
+		_plus_dms.put(pair, plus_dms); 
 		_minus_dms.put(pair, minus_dms);
 		_dxs.put(pair, dxs);
 
@@ -189,7 +197,7 @@ public class ADXBolt extends BaseRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("pair", "timeslice", "adx"));
+		declarer.declare(new Fields("pair", "timeslice", "minus_di", "plus_di", "adx"));
 	}
 
 }
