@@ -1,5 +1,7 @@
 package com.github.hurdad.storm.forex.bolt;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -13,11 +15,14 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
+/*
+ * Reference : http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:relative_strength_index_rsi
+ */
 public class RSIBolt extends BaseRichBolt {
 	OutputCollector _collector;
 	Integer _period;
-	Map<String, Queue<Double>> _change_queues;
-	Map<String, Double> _prev_close;
+	Map<String, Queue<BigDecimal>> _change_queues;
+	Map<String, BigDecimal> _prev_close;
 	Integer _counter;
 
 	public RSIBolt(Integer period) {
@@ -27,8 +32,8 @@ public class RSIBolt extends BaseRichBolt {
 	@Override
 	public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 		_collector = collector;
-		_change_queues = new HashMap<String, Queue<Double>>();
-		_prev_close = new HashMap<String, Double>();
+		_change_queues = new HashMap<String, Queue<BigDecimal>>();
+		_prev_close = new HashMap<String, BigDecimal>();
 	}
 
 	@Override
@@ -36,21 +41,29 @@ public class RSIBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double close = tuple.getDoubleByField("close");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
 		if (_change_queues.get(pair) == null)
-			_change_queues.put(pair, new LinkedList<Double>());
+			_change_queues.put(pair, new LinkedList<BigDecimal>());
 
 		// pair change q
-		Queue<Double> q = _change_queues.get(pair);
+		Queue<BigDecimal> q = _change_queues.get(pair);
 
 		// need 2 points to get change
 		if (_prev_close.get(pair) != null) {
 
+			BigDecimal bg1 = new BigDecimal(close);
+			BigDecimal bg2 = _prev_close.get(pair);
+
+			BigDecimal change = bg1.subtract(bg2);
+
 			// calc change
-			Double change = close - _prev_close.get(pair);
+			// Double change = close - _prev_close.get(pair);
+			// System.out.println(close);
+			// System.out.println(_prev_close.get(pair));
+			// System.out.println(change);
 
 			// add to front
 			q.add(change);
@@ -64,36 +77,56 @@ public class RSIBolt extends BaseRichBolt {
 		// have enough data to calc rsi
 		if (q.size() >= _period) {
 
-			Double sum_gain = 0d;
-			Double sum_loss = 0d;
+			BigDecimal sum_gain = BigDecimal.ZERO;
+			BigDecimal sum_loss = BigDecimal.ZERO;
 
 			// loop change
-			for (Double change : q) {
+			for (BigDecimal change : q) {
 
-				if (change >= 0)
-					sum_gain += change;
+				if (change.compareTo(BigDecimal.ZERO) >= 0)
+					sum_gain = sum_gain.add(change);
+				// sum_gain += change;
 
-				if (change < 0)
-					sum_loss += Math.abs(change);
+				if (change.compareTo(BigDecimal.ZERO) < 0)
+					sum_loss = sum_loss.add(change.abs());
+				// sum_loss += change.abs()
 
 			}
 
-			Double avg_gain = sum_gain / _period;
-			Double avg_loss = sum_loss / _period;
+			// System.out.println(sum_gain);
+			// System.out.println(sum_loss);
+
+			BigDecimal avg_gain = sum_gain.divide(new BigDecimal("14.00"), RoundingMode.HALF_UP);
+			BigDecimal avg_loss = sum_loss.divide(new BigDecimal("14.00"), RoundingMode.HALF_UP);
+
+			System.out.println(avg_gain);
+			System.out.println(avg_loss);
+
+			// Double avg_gain = sum_gain / _period;
+			// Double avg_loss = sum_loss / _period;
 
 			// check divide by zero
-			Double rsi;
-			if (avg_loss == 0) {
-				rsi = 100.00d;
+			// Double rsi;
+			BigDecimal rsi;
+			if (avg_loss.compareTo(BigDecimal.ZERO) == 0) {
+				rsi = new BigDecimal("100.00");
 			} else {
 				// calc and normalize
-				Double rs = avg_gain / avg_loss;
-				rsi = 100 - (100 / (1 + rs));
-				rsi = Math.round(rsi * 100) / 100.0d;
+				BigDecimal rs = avg_gain.divide(avg_loss, RoundingMode.HALF_UP);
+				// System.out.println(rs);
+				// Double rs = avg_gain / avg_loss;
+
+				BigDecimal t1 = new BigDecimal("100.00");
+				BigDecimal t2 = new BigDecimal("100.00");
+
+				rsi = t1.subtract(t2.divide(rs.add(new BigDecimal("1")), RoundingMode.HALF_UP));
+				// System.out.println(rsi);
+				// rsi = 100 - (100 / (1 + rs));
+				// rsi = Math.round(rsi * 100) / 100.0d;
 			}
 
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " rsi:" + rsi);
+			// if (pair.equals("EUR/USD"))
+			// System.out.println(timeslice + " rsi:" + rsi);
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, rsi));
@@ -101,8 +134,9 @@ public class RSIBolt extends BaseRichBolt {
 		}
 
 		// save
+
 		_change_queues.put(pair, q);
-		_prev_close.put(pair, close);
+		_prev_close.put(pair, new BigDecimal(close));
 
 	}
 

@@ -1,5 +1,8 @@
 package com.github.hurdad.storm.forex.bolt;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -16,20 +19,21 @@ import backtype.storm.tuple.Values;
 public class EMABolt extends BaseRichBolt {
 	OutputCollector _collector;
 	Integer _period;
-	Integer _smoothing_constant;
-	Map<String, Queue<Double>> _close_queues;
-	Map<String, Double> _prev_emas;
+	Double _smoothing_constant;
+	Map<String, Queue<BigDecimal>> _close_queues;
+	Map<String, BigDecimal> _prev_emas;
 
 	public EMABolt(Integer period) {
 		_period = period;
-		_smoothing_constant = 2 / (period + 1);
+		_smoothing_constant = (double) (2 / (period + 1));
+		//_smoothing_constant = new BigDecimal("2").divide(new BigDecimal(period).add(new BigDecimal("1")));
 	}
 
 	@Override
 	public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 		_collector = collector;
-		_close_queues = new HashMap<String, Queue<Double>>();
-		_prev_emas = new HashMap<String, Double>();
+		_close_queues = new HashMap<String, Queue<BigDecimal>>();
+		_prev_emas = new HashMap<String, BigDecimal>();
 	}
 
 	@Override
@@ -37,18 +41,18 @@ public class EMABolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double close = tuple.getDoubleByField("close");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
 		if (_close_queues.get(pair) == null)
-			_close_queues.put(pair, new LinkedList<Double>());
+			_close_queues.put(pair, new LinkedList<BigDecimal>());
 
 		// get queue for pair
-		Queue<Double> q = _close_queues.get(pair);
+		Queue<BigDecimal> q = _close_queues.get(pair);
 
 		// push close price onto queue
-		q.add(close);
+		q.add(new BigDecimal(close));
 
 		// pop back if too long
 		if (q.size() > _period)
@@ -61,14 +65,15 @@ public class EMABolt extends BaseRichBolt {
 			if (_prev_emas.get(pair) == null) {
 
 				// calc sma
-				Double sum = 0d;
-				for (Double val : q) {
-					sum = sum + val;
+				BigDecimal sum = BigDecimal.ZERO;
+				for (BigDecimal val : q) {
+					sum = sum.add(val);
 				}
-				Double sma = sum / _period;
+				BigDecimal sma = sum.divide(new BigDecimal("10"), RoundingMode.HALF_UP);
+				//Double sma = sum / _period;
 
 				// emit
-				_collector.emit(new Values(pair, timeslice, sma));
+				_collector.emit(new Values(pair, timeslice, sma.toString()));
 
 				// save
 				_prev_emas.put(pair, sma);
@@ -76,15 +81,16 @@ public class EMABolt extends BaseRichBolt {
 			} else {
 
 				// calc ema
-				Double ema = (close - _prev_emas.get(pair)) * _smoothing_constant
-						+ _prev_emas.get(pair);
-				ema = Math.round(ema * 100000) / 100000.0d;
+				BigDecimal ema = (new BigDecimal(close).subtract(_prev_emas.get(pair))).multiply(new BigDecimal(_smoothing_constant), new MathContext(4)).add(_prev_emas.get(pair));
+				//Double ema = (close - _prev_emas.get(pair)) * _smoothing_constant
+			//			+ _prev_emas.get(pair);
+				//ema = Math.round(ema * 100000) / 100000.0d;
 
-				if (pair.equals("EUR/USD"))
-					System.out.println(timeslice + " ema:" + ema);
+			//	if (pair.equals("EUR/USD"))
+					//System.out.println(timeslice + " ema:" + ema);
 
 				// emit
-				_collector.emit(new Values(pair, timeslice, ema));
+				_collector.emit(new Values(pair, timeslice, ema.toString()));
 
 				// save
 				_prev_emas.put(pair, ema);
