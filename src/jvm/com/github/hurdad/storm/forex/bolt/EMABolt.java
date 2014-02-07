@@ -19,14 +19,15 @@ import backtype.storm.tuple.Values;
 public class EMABolt extends BaseRichBolt {
 	OutputCollector _collector;
 	Integer _period;
+	Integer _scale;
 	Double _smoothing_constant;
 	Map<String, Queue<BigDecimal>> _close_queues;
 	Map<String, BigDecimal> _prev_emas;
 
-	public EMABolt(Integer period) {
+	public EMABolt(Integer period, Integer scale) {
 		_period = period;
-		_smoothing_constant = (double) (2 / (period + 1));
-		//_smoothing_constant = new BigDecimal("2").divide(new BigDecimal(period).add(new BigDecimal("1")));
+		_scale = scale;
+		_smoothing_constant =  (2 / (period.doubleValue() + 1));
 	}
 
 	@Override
@@ -69,9 +70,8 @@ public class EMABolt extends BaseRichBolt {
 				for (BigDecimal val : q) {
 					sum = sum.add(val);
 				}
-				BigDecimal sma = sum.divide(new BigDecimal("10"), RoundingMode.HALF_UP);
-				//Double sma = sum / _period;
-
+				BigDecimal sma = sum.divide(new BigDecimal(_period), _scale, RoundingMode.HALF_UP);
+				
 				// emit
 				_collector.emit(new Values(pair, timeslice, sma.toString()));
 
@@ -81,13 +81,8 @@ public class EMABolt extends BaseRichBolt {
 			} else {
 
 				// calc ema
-				BigDecimal ema = (new BigDecimal(close).subtract(_prev_emas.get(pair))).multiply(new BigDecimal(_smoothing_constant), new MathContext(4)).add(_prev_emas.get(pair));
-				//Double ema = (close - _prev_emas.get(pair)) * _smoothing_constant
-			//			+ _prev_emas.get(pair);
-				//ema = Math.round(ema * 100000) / 100000.0d;
-
-			//	if (pair.equals("EUR/USD"))
-					//System.out.println(timeslice + " ema:" + ema);
+				BigDecimal ema = (new BigDecimal(close).subtract(_prev_emas.get(pair))).multiply(new BigDecimal(_smoothing_constant)).add(_prev_emas.get(pair));
+				ema = ema.setScale(_scale,  RoundingMode.HALF_UP);
 
 				// emit
 				_collector.emit(new Values(pair, timeslice, ema.toString()));

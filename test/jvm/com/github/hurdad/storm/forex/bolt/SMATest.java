@@ -34,7 +34,7 @@ public class SMATest {
 	public void shouldEmitEMAValues() {
 
 		// given
-		SMABolt bolt = new SMABolt(10);
+		SMABolt bolt = new SMABolt(10, 5);
 		Map conf = mock(Map.class);
 		TopologyContext context = mock(TopologyContext.class);
 		OutputCollector collector = mock(OutputCollector.class);
@@ -84,27 +84,27 @@ public class SMATest {
 		}
 
 		// then
-		verify(collector).emit(new Values("mypair", 1270598400, "22.2248"));
-		verify(collector).emit(new Values("mypair", 1270684800, "22.2128"));
-		verify(collector).emit(new Values("mypair", 1270771200, "22.2327"));
-		verify(collector).emit(new Values("mypair", 1271030400, "22.2624"));
-		verify(collector).emit(new Values("mypair", 1271116800, "22.3061"));
-		verify(collector).emit(new Values("mypair", 1271203200, "22.4232"));
-		verify(collector).emit(new Values("mypair", 1271289600, "22.6150"));
-		verify(collector).emit(new Values("mypair", 1271376000, "22.7669"));
-		verify(collector).emit(new Values("mypair", 1271635200, "22.9069"));
-		verify(collector).emit(new Values("mypair", 1271721600, "23.0777"));
-		verify(collector).emit(new Values("mypair", 1271808000, "23.2118"));
-		verify(collector).emit(new Values("mypair", 1271894400, "23.3786"));
-		verify(collector).emit(new Values("mypair", 1271980800, "23.5266"));
-		verify(collector).emit(new Values("mypair", 1272240000, "23.6538"));
-		verify(collector).emit(new Values("mypair", 1272326400, "23.7114"));
-		verify(collector).emit(new Values("mypair", 1272412800, "23.6856"));
-		verify(collector).emit(new Values("mypair", 1272499200, "23.6130"));
-		verify(collector).emit(new Values("mypair", 1272585600, "23.5057"));
-		verify(collector).emit(new Values("mypair", 1272844800, "23.4323"));
-		verify(collector).emit(new Values("mypair", 1272931200, "23.2773"));
-		verify(collector).emit(new Values("mypair", 1273017600, "23.1312"));
+		verify(collector).emit(new Values("mypair", 1270598400, "22.22475"));
+		verify(collector).emit(new Values("mypair", 1270684800, "22.21283"));
+		verify(collector).emit(new Values("mypair", 1270771200, "22.23269"));
+		verify(collector).emit(new Values("mypair", 1271030400, "22.26238"));
+		verify(collector).emit(new Values("mypair", 1271116800, "22.30606"));
+		verify(collector).emit(new Values("mypair", 1271203200, "22.42324"));
+		verify(collector).emit(new Values("mypair", 1271289600, "22.61499"));
+		verify(collector).emit(new Values("mypair", 1271376000, "22.76692"));
+		verify(collector).emit(new Values("mypair", 1271635200, "22.90693"));
+		verify(collector).emit(new Values("mypair", 1271721600, "23.07773"));
+		verify(collector).emit(new Values("mypair", 1271808000, "23.21178"));
+		verify(collector).emit(new Values("mypair", 1271894400, "23.37861"));
+		verify(collector).emit(new Values("mypair", 1271980800, "23.52657"));
+		verify(collector).emit(new Values("mypair", 1272240000, "23.65378"));
+		verify(collector).emit(new Values("mypair", 1272326400, "23.71139"));
+		verify(collector).emit(new Values("mypair", 1272412800, "23.68557"));
+		verify(collector).emit(new Values("mypair", 1272499200, "23.61298"));
+		verify(collector).emit(new Values("mypair", 1272585600, "23.50573"));
+		verify(collector).emit(new Values("mypair", 1272844800, "23.43225"));
+		verify(collector).emit(new Values("mypair", 1272931200, "23.27734"));
+		verify(collector).emit(new Values("mypair", 1273017600, "23.13121"));
 
 	}
 

@@ -18,10 +18,12 @@ import backtype.storm.tuple.Values;
 public class SMABolt extends BaseRichBolt {
 	OutputCollector _collector;
 	Integer _period;
+	Integer _scale;
 	Map<String, Queue<BigDecimal>> _close_queues;
 
-	public SMABolt(Integer period) {
+	public SMABolt(Integer period, Integer scale) {
 		_period = period;
+		_scale = scale;
 	}
 
 	@Override
@@ -60,7 +62,7 @@ public class SMABolt extends BaseRichBolt {
 			for (BigDecimal val : q) {
 				sum = sum.add(val);
 			}
-			BigDecimal sma = sum.divide(new BigDecimal(_period), RoundingMode.HALF_UP);
+			BigDecimal sma = sum.divide(new BigDecimal(_period), _scale, RoundingMode.HALF_UP);
 
 			// emit
 			_collector.emit(new Values(pair, timeslice, sma.toString()));

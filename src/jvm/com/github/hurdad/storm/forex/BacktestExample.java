@@ -24,8 +24,8 @@ public class BacktestExample {
 				new Fields("pair"));
 
 		// moving averages
-		builder.setBolt("sma_5", new SMABolt(5), 2).fieldsGrouping("ohlc_300", new Fields("pair"));
-		builder.setBolt("ema_5", new EMABolt(5), 2).fieldsGrouping("ohlc_300", new Fields("pair"));
+		builder.setBolt("sma_5", new SMABolt(5, 5), 2).fieldsGrouping("ohlc_300", new Fields("pair"));
+		builder.setBolt("ema_5", new EMABolt(5, 5), 2).fieldsGrouping("ohlc_300", new Fields("pair"));
 
 		// technical analysis
 		builder.setBolt("adx_14", new ADXBolt(14), 2)
