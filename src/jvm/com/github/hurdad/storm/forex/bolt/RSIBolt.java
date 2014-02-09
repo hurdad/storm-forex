@@ -23,6 +23,8 @@ public class RSIBolt extends BaseRichBolt {
 	Integer _period;
 	Map<String, Queue<BigDecimal>> _change_queues;
 	Map<String, BigDecimal> _prev_close;
+	Map<String, Double> _prev_avg_gain;
+	Map<String, Double> _prev_avg_loss;
 	Integer _counter;
 
 	public RSIBolt(Integer period) {
@@ -34,6 +36,8 @@ public class RSIBolt extends BaseRichBolt {
 		_collector = collector;
 		_change_queues = new HashMap<String, Queue<BigDecimal>>();
 		_prev_close = new HashMap<String, BigDecimal>();
+		_prev_avg_gain = new HashMap<String, Double>();
+		_prev_avg_loss = new HashMap<String, Double>();
 	}
 
 	@Override
@@ -48,22 +52,18 @@ public class RSIBolt extends BaseRichBolt {
 		if (_change_queues.get(pair) == null)
 			_change_queues.put(pair, new LinkedList<BigDecimal>());
 
+		BigDecimal change = null;
+		Double avg_gain = null;
+		Double avg_loss = null;
+
 		// pair change q
 		Queue<BigDecimal> q = _change_queues.get(pair);
 
-		// need 2 points to get change
+		// prev close required to calc change
 		if (_prev_close.get(pair) != null) {
 
-			BigDecimal bg1 = new BigDecimal(close);
-			BigDecimal bg2 = _prev_close.get(pair);
-
-			BigDecimal change = bg1.subtract(bg2);
-
 			// calc change
-			// Double change = close - _prev_close.get(pair);
-			// System.out.println(close);
-			// System.out.println(_prev_close.get(pair));
-			// System.out.println(change);
+			change = new BigDecimal(close).subtract(_prev_close.get(pair));
 
 			// add to front
 			q.add(change);
@@ -74,67 +74,73 @@ public class RSIBolt extends BaseRichBolt {
 
 		}
 
-		// have enough data to calc rsi
-		if (q.size() >= _period) {
+		// have enough data to calc first sma
+		if (q.size() == _period && _prev_avg_gain.get(pair) == null
+				&& _prev_avg_loss.get(pair) == null) {
 
 			BigDecimal sum_gain = BigDecimal.ZERO;
 			BigDecimal sum_loss = BigDecimal.ZERO;
 
 			// loop change
-			for (BigDecimal change : q) {
+			for (BigDecimal c : q) {
 
-				if (change.compareTo(BigDecimal.ZERO) >= 0)
-					sum_gain = sum_gain.add(change);
-				// sum_gain += change;
+				if (c.compareTo(BigDecimal.ZERO) >= 0)
+					sum_gain = sum_gain.add(c);
 
-				if (change.compareTo(BigDecimal.ZERO) < 0)
-					sum_loss = sum_loss.add(change.abs());
-				// sum_loss += change.abs()
-
+				if (c.compareTo(BigDecimal.ZERO) < 0)
+					sum_loss = sum_loss.add(c.abs());
 			}
 
-			// System.out.println(sum_gain);
-			// System.out.println(sum_loss);
+			// calc avg gain/loss
+			avg_gain = sum_gain.doubleValue() / _period;
+			avg_loss = sum_loss.doubleValue() / _period;
+		}
 
-			BigDecimal avg_gain = sum_gain.divide(new BigDecimal("14.00"), RoundingMode.HALF_UP);
-			BigDecimal avg_loss = sum_loss.divide(new BigDecimal("14.00"), RoundingMode.HALF_UP);
+		// subsequent calcs
+		if (q.size() == _period && _prev_avg_gain.get(pair) != null
+				&& _prev_avg_loss.get(pair) != null && change != null) {
 
-			System.out.println(avg_gain);
-			System.out.println(avg_loss);
+			BigDecimal gain = (change.compareTo(BigDecimal.ZERO) > 0) ? change
+					: new BigDecimal("0");
+			BigDecimal loss = (change.compareTo(BigDecimal.ZERO) < 0) ? change
+					: new BigDecimal("0");
 
-			// Double avg_gain = sum_gain / _period;
-			// Double avg_loss = sum_loss / _period;
+			// calc avg gain/loss
+			avg_gain = (_prev_avg_gain.get(pair).doubleValue() * (_period - 1) + gain.doubleValue())
+					/ _period;
+			avg_loss = (_prev_avg_loss.get(pair).doubleValue() * (_period - 1) - loss.doubleValue())
+					/ _period;
+
+		}
+
+		// avg_gain & avg_loss required for rs/rsi calc
+		if (avg_gain != null & avg_loss != null) {
 
 			// check divide by zero
-			// Double rsi;
 			BigDecimal rsi;
-			if (avg_loss.compareTo(BigDecimal.ZERO) == 0) {
+			if (avg_loss == 0) {
 				rsi = new BigDecimal("100.00");
 			} else {
-				// calc and normalize
-				BigDecimal rs = avg_gain.divide(avg_loss, RoundingMode.HALF_UP);
-				// System.out.println(rs);
-				// Double rs = avg_gain / avg_loss;
 
-				BigDecimal t1 = new BigDecimal("100.00");
-				BigDecimal t2 = new BigDecimal("100.00");
+				// calc rs
+				BigDecimal rs = new BigDecimal(avg_gain / avg_loss);
 
-				rsi = t1.subtract(t2.divide(rs.add(new BigDecimal("1")), RoundingMode.HALF_UP));
-				// System.out.println(rsi);
-				// rsi = 100 - (100 / (1 + rs));
-				// rsi = Math.round(rsi * 100) / 100.0d;
+				// calc rsi
+				rsi = new BigDecimal("100.00").subtract(new BigDecimal("100.00").divide(
+						rs.add(new BigDecimal("1")), RoundingMode.HALF_UP));
+
 			}
 
-			// if (pair.equals("EUR/USD"))
-			// System.out.println(timeslice + " rsi:" + rsi);
-
 			// emit
-			_collector.emit(new Values(pair, timeslice, rsi));
+			_collector.emit(new Values(pair, timeslice, rsi.toString()));
+
+			// save
+			_prev_avg_gain.put(pair, avg_gain);
+			_prev_avg_loss.put(pair, avg_loss);
 
 		}
 
 		// save
-
 		_change_queues.put(pair, q);
 		_prev_close.put(pair, new BigDecimal(close));
 
