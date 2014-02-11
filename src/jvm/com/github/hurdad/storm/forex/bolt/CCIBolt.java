@@ -33,13 +33,10 @@ public class CCIBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double high = tuple.getDoubleByField("high");
-		Double low = tuple.getDoubleByField("low");
-		Double close = tuple.getDoubleByField("close");
+		String high = tuple.getStringByField("high");
+		String low = tuple.getStringByField("low");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
-
-		// typical price calc
-		Double tp = (high + low + close) / 3;
 
 		// init
 		if (_tp_queues.get(pair) == null)
@@ -47,6 +44,9 @@ public class CCIBolt extends BaseRichBolt {
 
 		// pair tp q
 		Queue<Double> q = _tp_queues.get(pair);
+
+		// typical price calc
+		Double tp = (Double.parseDouble(high) + Double.parseDouble(low) + Double.parseDouble(close)) / 3;
 
 		// add to front
 		q.add(tp);
@@ -61,26 +61,22 @@ public class CCIBolt extends BaseRichBolt {
 			// TP moving average
 			Double sum = 0d;
 			for (Double val : q) {
-				sum = sum + val;
+				sum += val;
 			}
 			Double tp_sma = sum / _period;
 
 			// calc mean dev
 			Double sum_abs = 0d;
 			for (Double val : q) {
-				sum_abs = Math.abs(tp_sma - val);
+				sum_abs += Math.abs(tp_sma - val);
 			}
 			Double mean_dev = sum_abs / _period;
 
 			// calc cci
 			Double cci = (tp - tp_sma) / (0.015 * mean_dev);
-			cci = Math.round(cci) / 100.0d;
-
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " cci:" + cci);
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, cci));
+			_collector.emit(new Values(pair, timeslice, String.format("%.2f", cci)));
 
 		}
 
