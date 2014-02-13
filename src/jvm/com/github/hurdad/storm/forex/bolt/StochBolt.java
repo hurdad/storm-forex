@@ -40,9 +40,9 @@ public class StochBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double high = tuple.getDoubleByField("high");
-		Double low = tuple.getDoubleByField("low");
-		Double close = tuple.getDoubleByField("close");
+		String high = tuple.getStringByField("high");
+		String low = tuple.getStringByField("low");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		Double k = null, sma = null;
@@ -63,8 +63,8 @@ public class StochBolt extends BaseRichBolt {
 		Queue<Double> ks = _k_queues.get(pair);
 
 		// add to front
-		highs.add(high);
-		lows.add(low);
+		highs.add(Double.parseDouble(high));
+		lows.add(Double.parseDouble(low));
 
 		// pop back if too long
 		if (highs.size() > _period)
@@ -91,8 +91,7 @@ public class StochBolt extends BaseRichBolt {
 			}
 
 			// calc
-			k = (close - l) / (h - l) * 100;
-			k = Math.round(k * 100) / 100.0d;
+			k = (Double.parseDouble(close) - l) / (h - l) * 100;
 
 			// add to front
 			ks.add(k);
@@ -112,16 +111,15 @@ public class StochBolt extends BaseRichBolt {
 				sum = sum + val;
 			}
 			sma = sum / _sma_period;
-			sma = Math.round(sma * 100) / 100.0d;
 
 		}
 
-		if(k != null){
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " stoch:" + k + " " + sma);
-	
+		// have enough data to emit
+		if (k != null && sma != null) {
+
 			// emit
-			_collector.emit(new Values(pair, timeslice, k, sma));
+			_collector.emit(new Values(pair, timeslice, String.format("%.2f", k), String.format(
+					"%.2f", sma)));
 		}
 
 		// save

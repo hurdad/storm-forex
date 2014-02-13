@@ -31,7 +31,7 @@ public class ROCTest {
 	}
 
 	@Test
-	public void shouldEmitEMAValues() {
+	public void shouldEmitROCValues() {
 
 		// given
 		ROCBolt bolt = new ROCBolt(12);

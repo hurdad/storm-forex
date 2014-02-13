@@ -32,7 +32,7 @@ public class MACDTest {
 	}
 
 	@Test
-	public void shouldEmitEMAValues() {
+	public void shouldEmitMACDValues() {
 
 		// given
 		MACDBolt bolt = new MACDBolt(12, 26, 9);
