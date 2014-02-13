@@ -16,19 +16,21 @@ import backtype.storm.tuple.Values;
 public class MACDBolt extends BaseRichBolt {
 	OutputCollector _collector;
 	Integer _ema1, _ema2, _signal;
-	Double _smoothing_constant_1, _smoothing_constant_2;
+	Double _smoothing_constant_1, _smoothing_constant_2, _smoothing_constant_3;
 	Map<String, Queue<Double>> _close_queues1;
 	Map<String, Queue<Double>> _close_queues2;
 	Map<String, Queue<Double>> _macd_queues;
 	Map<String, Double> _prev_ema1;
 	Map<String, Double> _prev_ema2;
+	Map<String, Double> _prev_macd;
 
 	public MACDBolt(Integer ema1, Integer ema2, Integer signal) {
 		_ema1 = ema1;
 		_ema2 = ema2;
 		_signal = signal;
-		_smoothing_constant_1 = (double) (2 / (ema1 + 1));
-		_smoothing_constant_2 = (double) (2 / (ema2 + 1));
+		_smoothing_constant_1 = (2 / (ema1.doubleValue() + 1));
+		_smoothing_constant_2 = (2 / (ema2.doubleValue() + 1));
+		_smoothing_constant_3 = (2 / (signal.doubleValue() + 1));
 	}
 
 	@Override
@@ -39,6 +41,7 @@ public class MACDBolt extends BaseRichBolt {
 		_macd_queues = new HashMap<String, Queue<Double>>();
 		_prev_ema1 = new HashMap<String, Double>();
 		_prev_ema2 = new HashMap<String, Double>();
+		_prev_macd = new HashMap<String, Double>();
 	}
 
 	@Override
@@ -46,9 +49,7 @@ public class MACDBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double high = tuple.getDoubleByField("high");
-		Double low = tuple.getDoubleByField("low");
-		Double close = tuple.getDoubleByField("close");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
@@ -69,11 +70,11 @@ public class MACDBolt extends BaseRichBolt {
 		Double ema1_value = null;
 		Double ema2_value = null;
 		Double macd_line = null;
-		Double macd_line_sma = null;
+		Double macd_line_ema = null;
 
 		// push close price onto queue
-		close1.add(close);
-		close2.add(close);
+		close1.add(Double.parseDouble(close));
+		close2.add(Double.parseDouble(close));
 
 		// pop back if too long
 		if (close1.size() > _ema1)
@@ -101,8 +102,8 @@ public class MACDBolt extends BaseRichBolt {
 			} else {
 
 				// ema formula
-				Double ema = (close - _prev_ema1.get(pair)) * _smoothing_constant_1
-						+ _prev_ema1.get(pair);
+				Double ema = (Double.parseDouble(close) - _prev_ema1.get(pair))
+						* _smoothing_constant_1 + _prev_ema1.get(pair);
 
 				// save
 				_prev_ema1.put(pair, ema);
@@ -122,7 +123,7 @@ public class MACDBolt extends BaseRichBolt {
 				for (Double val : close2) {
 					sum = sum + val;
 				}
-				Double sma = sum / _ema1;
+				Double sma = sum / _ema2;
 
 				// save
 				_prev_ema2.put(pair, sma);
@@ -131,8 +132,8 @@ public class MACDBolt extends BaseRichBolt {
 			} else {
 
 				// ema formula
-				Double ema = (close - _prev_ema2.get(pair)) * _smoothing_constant_2
-						+ _prev_ema2.get(pair);
+				Double ema = (Double.parseDouble(close) - _prev_ema2.get(pair))
+						* _smoothing_constant_2 + _prev_ema2.get(pair);
 
 				// save
 				_prev_ema2.put(pair, ema);
@@ -144,8 +145,8 @@ public class MACDBolt extends BaseRichBolt {
 		// check if we have 2 values to calc MACD Line
 		if (ema1_value != null && ema2_value != null) {
 
+			// calc macd line
 			macd_line = ema1_value - ema2_value;
-			macd_line = Math.round(macd_line * 100) / 100.0d;
 
 			// add to front
 			macd.add(macd_line);
@@ -159,23 +160,39 @@ public class MACDBolt extends BaseRichBolt {
 		// have enough data to calc signal sma
 		if (macd.size() == _signal) {
 
-			// k moving average
-			Double sum = 0d;
-			for (Double val : macd) {
-				sum = sum + val;
-			}
-			macd_line_sma = sum / _signal;
-			macd_line_sma = Math.round(macd_line_sma * 100) / 100.0d;
+			// first
+			if (_prev_macd.get(pair) == null) {
 
+				// k moving average
+				Double sum = 0d;
+				for (Double val : macd) {
+					sum = sum + val;
+				}
+				Double macd_line_sma = sum / _signal;
+
+				_prev_macd.put(pair, macd_line_sma);
+				macd_line_ema = macd_line_sma;
+
+			} else {
+
+				// ema formula
+				macd_line_ema = (macd_line - _prev_macd.get(pair)) * _smoothing_constant_3
+						+ _prev_macd.get(pair);
+
+				_prev_macd.put(pair, macd_line_ema);
+
+			}
 		}
 
-		if (macd_line != null) {
+		//check if we have values to emit
+		if (macd_line != null && macd_line_ema != null) {
 
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " macd:" + macd_line + " " + macd_line_sma);
+			// histogram calc
+			Double histogram = macd_line - macd_line_ema;
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, macd_line, macd_line_sma));
+			_collector.emit(new Values(pair, timeslice, String.format("%.3f", macd_line), String
+					.format("%.3f", macd_line_ema), String.format("%.3f", histogram)));
 		}
 
 		// save
@@ -187,7 +204,7 @@ public class MACDBolt extends BaseRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("pair", "timeslice", "macd", "signal"));
+		declarer.declare(new Fields("pair", "timeslice", "macd", "signal", "histogram"));
 	}
 
 }
