@@ -17,7 +17,7 @@ public class UOBolt extends BaseRichBolt {
 
 	OutputCollector _collector;
 	Integer _period1, _period2, _period3;
-	Map<String, Double> _prev_closes;
+	Map<String, Double> _prev_close;
 	Map<String, Queue<Double>> _buying_pressure1, _buying_pressure2, _buying_pressure3;
 	Map<String, Queue<Double>> _true_ranges1, _true_ranges2, _true_ranges3;
 
@@ -30,7 +30,7 @@ public class UOBolt extends BaseRichBolt {
 	@Override
 	public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
 		_collector = collector;
-		_prev_closes = new HashMap<String, Double>();
+		_prev_close = new HashMap<String, Double>();
 		_buying_pressure1 = new HashMap<String, Queue<Double>>();
 		_buying_pressure2 = new HashMap<String, Queue<Double>>();
 		_buying_pressure3 = new HashMap<String, Queue<Double>>();
@@ -44,9 +44,9 @@ public class UOBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double high = tuple.getDoubleByField("high");
-		Double low = tuple.getDoubleByField("low");
-		Double close = tuple.getDoubleByField("low");
+		String high = tuple.getStringByField("high");
+		String low = tuple.getStringByField("low");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
@@ -54,8 +54,8 @@ public class UOBolt extends BaseRichBolt {
 			_buying_pressure1.put(pair, new LinkedList<Double>());
 		if (_buying_pressure2.get(pair) == null)
 			_buying_pressure2.put(pair, new LinkedList<Double>());
-		if (_buying_pressure2.get(pair) == null)
-			_buying_pressure2.put(pair, new LinkedList<Double>());
+		if (_buying_pressure3.get(pair) == null)
+			_buying_pressure3.put(pair, new LinkedList<Double>());
 		if (_true_ranges1.get(pair) == null)
 			_true_ranges1.put(pair, new LinkedList<Double>());
 		if (_true_ranges2.get(pair) == null)
@@ -65,18 +65,18 @@ public class UOBolt extends BaseRichBolt {
 
 		// queues
 		Queue<Double> bp1 = _buying_pressure1.get(pair);
-		Queue<Double> bp2 = _buying_pressure1.get(pair);
-		Queue<Double> bp3 = _buying_pressure1.get(pair);
+		Queue<Double> bp2 = _buying_pressure2.get(pair);
+		Queue<Double> bp3 = _buying_pressure3.get(pair);
 		Queue<Double> tr1 = _true_ranges1.get(pair);
 		Queue<Double> tr2 = _true_ranges2.get(pair);
 		Queue<Double> tr3 = _true_ranges3.get(pair);
 
 		// need 2 data points
-		if (_prev_closes.get(pair) != null) {
+		if (_prev_close.get(pair) != null) {
 
 			// calc buying pressure
-			Double buying_pressure = close - Math.min(low, _prev_closes.get(pair));
-
+			Double buying_pressure = Double.parseDouble(close) - Math.min(Double.parseDouble(low), _prev_close.get(pair));
+			
 			// add to front
 			bp1.add(buying_pressure);
 			bp2.add(buying_pressure);
@@ -91,9 +91,9 @@ public class UOBolt extends BaseRichBolt {
 				bp3.poll();
 
 			// calc true range
-			Double tr = Math.max(high, _prev_closes.get(pair))
-					- Math.min(low, _prev_closes.get(pair));
-
+			Double tr = Math.max(Double.parseDouble(high), _prev_close.get(pair))
+					- Math.min(Double.parseDouble(low), _prev_close.get(pair));
+			
 			// add to front
 			tr1.add(tr);
 			tr2.add(tr);
@@ -135,7 +135,7 @@ public class UOBolt extends BaseRichBolt {
 
 			// calc average period2
 			Double avg_2 = sum_buying_pressure_2 / sum_true_range_2;
-
+			
 			Double sum_true_range_3 = 0d;
 			for (Double val : tr3) {
 				sum_true_range_3 += val;
@@ -145,22 +145,18 @@ public class UOBolt extends BaseRichBolt {
 				sum_buying_pressure_3 += val;
 			}
 
-			// calc avg_28
+			// calc avg_3
 			Double avg_3 = sum_buying_pressure_3 / sum_true_range_3;
-
-			// calc Ulitimate Oscillator
+		
+			// calc ultimate oscillator
 			Double uo = 100 * ((4 * avg_1) + (2 * avg_2) + avg_3) / (4 + 2 + 1);
-			uo = Math.round(uo * 100) / 100.0d;
-
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " uo:" + uo);
-
+	
 			// emit
-			_collector.emit(new Values(pair, timeslice, uo));
+			_collector.emit(new Values(pair, timeslice, String.format("%.2f", uo)));
 		}
 
 		// save
-		_prev_closes.put(pair, close);
+		_prev_close.put(pair, Double.parseDouble(close));
 		_buying_pressure1.put(pair, bp1);
 		_buying_pressure2.put(pair, bp2);
 		_buying_pressure3.put(pair, bp3);
