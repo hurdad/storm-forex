@@ -33,7 +33,7 @@ public class ROCBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double close = tuple.getDoubleByField("close");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
@@ -44,26 +44,22 @@ public class ROCBolt extends BaseRichBolt {
 		Queue<Double> closes = _close_queues.get(pair);
 
 		// push close price onto queue
-		closes.add(close);
+		closes.add(Double.parseDouble(close));
+
+		// have enough data to calc roc
+		if (closes.size() > _period) {
+
+			// calc
+			Double roc = ((Double.parseDouble(close) - closes.peek()) / closes.peek()) * 100;
+
+			// emit
+			_collector.emit(new Values(pair, timeslice, String.format("%.2f", roc)));
+
+		}
 
 		// pop back if too long
 		if (closes.size() > _period)
 			closes.poll();
-
-		if (closes.size() == _period) {
-
-			// calc
-			Double roc = ((close - closes.peek()) / closes.peek()) * 100;
-			roc = Math.round(roc * 100) / 100.0d;
-
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " roc:" + roc);
-
-			// emit
-			_collector.emit(new Values(pair, timeslice, roc));
-
-		}
-
 		// save
 		_close_queues.put(pair, closes);
 
