@@ -35,9 +35,9 @@ public class PercRBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double high = tuple.getDoubleByField("high");
-		Double low = tuple.getDoubleByField("low");
-		Double close = tuple.getDoubleByField("close");
+		String high = tuple.getStringByField("high");
+		String low = tuple.getStringByField("low");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
@@ -52,8 +52,8 @@ public class PercRBolt extends BaseRichBolt {
 		Queue<Double> lows = _low_queues.get(pair);
 
 		// add to front
-		highs.add(high);
-		lows.add(low);
+		highs.add(Double.parseDouble(high));
+		lows.add(Double.parseDouble(low));
 
 		// pop back if too long
 		if (highs.size() > _period)
@@ -80,14 +80,10 @@ public class PercRBolt extends BaseRichBolt {
 			}
 
 			// calc percent R
-			Double perc_r = (h - close) / (h - l) * -100;
-			perc_r = Math.round(perc_r * 100) / 100.0d;
-
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " perc_r:" + perc_r);
+			Double perc_r = (h - Double.parseDouble(close)) / (h - l) * -100;
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, perc_r));
+			_collector.emit(new Values(pair, timeslice, String.format("%.2f", perc_r)));
 
 		}
 
