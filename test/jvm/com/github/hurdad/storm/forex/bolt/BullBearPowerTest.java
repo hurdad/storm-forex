@@ -15,10 +15,9 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
-/*
- * Reference : http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:ultimate_oscillator
- */
-public class UOTest {
+import com.github.hurdad.storm.forex.bolt.StochRSITest.TupleType;
+
+public class BullBearPowerTest {
 
 	class TupleType {
 		public String high;
@@ -35,20 +34,22 @@ public class UOTest {
 	}
 
 	@Test
-	public void shouldEmitUOValues() {
+	public void shouldEmitBullBearPowerValues() {
 
 		// given
-		UOBolt bolt = new UOBolt(7, 14, 28);
+		BullBearPowerBolt bolt = new BullBearPowerBolt(13);
 		Map conf = mock(Map.class);
 		TopologyContext context = mock(TopologyContext.class);
 		OutputCollector collector = mock(OutputCollector.class);
 		bolt.prepare(conf, context, collector);
 
 		List<TupleType> data = new ArrayList<TupleType>();
+		// data.add(new TupleType(1266883200, "127.0090", "125.3574", ""));
+
 		data.add(new TupleType(1287532800, "57.9342", "56.5199", "57.5657"));
-		data.add(new TupleType(1287619200, "58.4620", "57.0677", "57.6653"));
+		data.add(new TupleType(1287619200, "58.462", "57.0677", "57.6653"));
 		data.add(new TupleType(1287705600, "57.7649", "56.4403", "56.9183"));
-		data.add(new TupleType(1287964800, "59.8763", "57.5258", "58.4720"));
+		data.add(new TupleType(1287964800, "59.8763", "57.5258", "58.472"));
 		data.add(new TupleType(1288051200, "59.0198", "57.5756", "58.7409"));
 		data.add(new TupleType(1288137600, "60.1751", "57.8943", "60.0058"));
 		data.add(new TupleType(1288224000, "60.2946", "58.0139", "58.4521"));
@@ -67,11 +68,11 @@ public class UOTest {
 		data.add(new TupleType(1289865600, "60.5037", "58.2031", "59.0895"));
 		data.add(new TupleType(1289952000, "59.8862", "58.9102", "59.0098"));
 		data.add(new TupleType(1290038400, "60.3245", "59.0905", "59.3883"));
-		data.add(new TupleType(1290124800, "59.7070", "58.5915", "59.2090"));
+		data.add(new TupleType(1290124800, "59.707", "58.5915", "59.209"));
 		data.add(new TupleType(1290384000, "62.2168", "59.4401", "59.6572"));
 		data.add(new TupleType(1290470400, "59.7368", "57.3267", "59.0696"));
-		data.add(new TupleType(1290556800, "59.9360", "59.1094", "59.8962"));
-		data.add(new TupleType(1290729600, "59.6470", "58.8714", "59.2887"));
+		data.add(new TupleType(1290556800, "59.936", "59.1094", "59.8962"));
+		data.add(new TupleType(1290729600, "59.647", "58.8714", "59.2887"));
 		data.add(new TupleType(1290988800, "59.3683", "58.2429", "59.1194"));
 		data.add(new TupleType(1291075200, "60.2149", "58.2628", "59.6771"));
 		data.add(new TupleType(1291161600, "61.6989", "60.5834", "61.4798"));
@@ -90,7 +91,25 @@ public class UOTest {
 		}
 
 		// then
-		verify(collector).emit(new Values("mypair", 1291075200, "53.40"));
-		verify(collector).emit(new Values("mypair", 1291161600, "57.16"));
+		verify(collector).emit(new Values("mypair", 1288915200, "0.9064"));
+		verify(collector).emit(new Values("mypair", 1289174400, "1.8126"));
+		verify(collector).emit(new Values("mypair", 1289260800, "1.5537"));
+		verify(collector).emit(new Values("mypair", 1289347200, "1.7230"));
+		verify(collector).emit(new Values("mypair", 1289433600, "1.9122"));
+		verify(collector).emit(new Values("mypair", 1289520000, "2.4400"));
+		verify(collector).emit(new Values("mypair", 1289779200, "1.7927"));
+		verify(collector).emit(new Values("mypair", 1289865600, "2.3006"));
+		verify(collector).emit(new Values("mypair", 1289952000, "0.9760"));
+		verify(collector).emit(new Values("mypair", 1290038400, "1.2340"));
+		verify(collector).emit(new Values("mypair", 1290124800, "1.1155"));
+		verify(collector).emit(new Values("mypair", 1290384000, "2.7767"));
+		verify(collector).emit(new Values("mypair", 1290470400, "2.4101"));
+		verify(collector).emit(new Values("mypair", 1290556800, "0.8266"));
+		verify(collector).emit(new Values("mypair", 1290729600, "0.7756"));
+		verify(collector).emit(new Values("mypair", 1290988800, "1.1254"));
+		verify(collector).emit(new Values("mypair", 1291075200, "1.9521"));
+		verify(collector).emit(new Values("mypair", 1291161600, "1.1155"));
+
 	}
+
 }

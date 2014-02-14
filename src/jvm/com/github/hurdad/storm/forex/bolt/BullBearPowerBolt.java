@@ -37,9 +37,9 @@ public class BullBearPowerBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double high = tuple.getDoubleByField("high");
-		Double low = tuple.getDoubleByField("low");
-		Double close = tuple.getDoubleByField("close");
+		String high = tuple.getStringByField("high");
+		String low = tuple.getStringByField("low");
+		String close = tuple.getStringByField("close");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
@@ -50,7 +50,7 @@ public class BullBearPowerBolt extends BaseRichBolt {
 		Queue<Double> q = _close_queues.get(pair);
 
 		// push close price onto queue
-		q.add(close);
+		q.add(Double.parseDouble(close));
 
 		// pop back if too long
 		if (q.size() > _period)
@@ -75,24 +75,20 @@ public class BullBearPowerBolt extends BaseRichBolt {
 			} else {
 
 				// calc ema
-				Double ema = (close - _prev_emas.get(pair)) * _smoothing_constant
-						+ _prev_emas.get(pair);
+				Double ema = (Double.parseDouble(close) - _prev_emas.get(pair))
+						* _smoothing_constant + _prev_emas.get(pair);
 
 				// save
 				_prev_emas.put(pair, ema);
 			}
 
 			// calc bull bear power
-			Double bull_power = high - _prev_emas.get(pair);
-			Double bear_power = low - _prev_emas.get(pair);
+			Double bull_power = Double.parseDouble(high) - _prev_emas.get(pair);
+			Double bear_power = Double.parseDouble(low) - _prev_emas.get(pair);
 			Double diff = bull_power - bear_power;
-			diff = Math.round(diff * 100) / 100.0d;
-
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " bbp:" + diff);
 
 			// emit
-			_collector.emit(new Values(pair, timeslice, diff));
+			_collector.emit(new Values(pair, timeslice, String.format("%.4f", diff)));
 		}
 		// save
 		_close_queues.put(pair, q);
