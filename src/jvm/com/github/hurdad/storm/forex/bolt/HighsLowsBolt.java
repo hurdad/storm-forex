@@ -35,8 +35,8 @@ public class HighsLowsBolt extends BaseRichBolt {
 
 		// input vars
 		String pair = tuple.getStringByField("pair");
-		Double high = tuple.getDoubleByField("high");
-		Double low = tuple.getDoubleByField("low");
+		String high = tuple.getStringByField("high");
+		String low = tuple.getStringByField("low");
 		Integer timeslice = tuple.getIntegerByField("timeslice");
 
 		// init
@@ -51,8 +51,8 @@ public class HighsLowsBolt extends BaseRichBolt {
 		Queue<Double> lows = _low_queues.get(pair);
 
 		// add to front
-		highs.add(high);
-		lows.add(low);
+		highs.add(Double.parseDouble(high));
+		lows.add(Double.parseDouble(low));
 
 		// pop back if too long
 		if (highs.size() > _period)
@@ -70,23 +70,19 @@ public class HighsLowsBolt extends BaseRichBolt {
 				lows_sum = lows_sum + val;
 			}
 			Double lows_sma = lows_sum / _period;
-
+		
 			// calc sma high
 			Double highs_sum = 0d;
 			for (Double val : highs) {
 				highs_sum = highs_sum + val;
 			}
 			Double highs_sma = highs_sum / _period;
-
+		
 			// calc highs/lows
-			Double high_low = highs_sma / lows_sma - 1;
-			//high_low = Math.round(high_low * 100000) / 100000.0d;
-
-			if (pair.equals("EUR/USD"))
-				System.out.println(timeslice + " highslows:" + high_low);
-
+			Double high_low = (highs_sma / lows_sma) - 1;
+		
 			// emit
-			_collector.emit(new Values(pair, timeslice, high_low));
+			_collector.emit(new Values(pair, timeslice, String.format("%.4f", high_low)));
 		}
 
 		// save
@@ -96,7 +92,7 @@ public class HighsLowsBolt extends BaseRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("pair", "timeslice", "highslow"));
+		declarer.declare(new Fields("pair", "timeslice", "highlow"));
 	}
 
 }

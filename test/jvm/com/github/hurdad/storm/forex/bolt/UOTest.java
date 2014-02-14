@@ -37,7 +37,7 @@ public class UOTest {
 	}
 
 	@Test
-	public void shouldEmitPercRValues() {
+	public void shouldEmitUOValues() {
 
 		// given
 		UOBolt bolt = new UOBolt(7, 14, 28);
