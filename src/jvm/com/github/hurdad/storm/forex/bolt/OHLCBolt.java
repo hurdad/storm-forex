@@ -42,15 +42,11 @@ public class OHLCBolt extends BaseRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-		
-		//System.out.println("-------------------------------");
 
+		// init input tuple vars
 		String pair = tuple.getStringByField("pair");
 		Double price = tuple.getDoubleByField("price");
 		Long ts = (long) Math.floor((tuple.getLongByField("timestamp") / 1000));
-		
-		//System.out.println("price: " + price);
-		//System.out.println("ts: " + tuple.getLongByField("timestamp"));
 
 		// filter duplicate or old ts
 		if (_lastTimeMap.get(pair) != null && ts <= _lastTimeMap.get(pair))
@@ -64,9 +60,10 @@ public class OHLCBolt extends BaseRichBolt {
 				&& timeslice.intValue() != _currentTimesliceMap.get(pair)) {
 
 			// emit
-			_collector.emit(new Values(pair, _opens.get(pair).toString(), _highs.get(pair).toString(), _lows.get(pair).toString(),
-					_previousPriceMap.get(pair).toString(), _vols.get(pair), _currentTimesliceMap.get(pair),
-					_time_window));
+			_collector.emit(new Values(pair, _opens.get(pair).toString(), _highs.get(pair)
+					.toString(), _lows.get(pair).toString(),
+					_previousPriceMap.get(pair).toString(), _vols.get(pair), _currentTimesliceMap
+							.get(pair), _time_window));
 
 			// reset
 			_opens.put(pair, price);
