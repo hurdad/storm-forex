@@ -42,24 +42,24 @@ public class HighsLowsTest {
 
 		List<TupleType> data = new ArrayList<TupleType>();
 
-		data.add(new TupleType(1365120000, "155.35", "153.77"));
-		data.add(new TupleType(1365033600, "156.17", "155.09"));
-		data.add(new TupleType(1364947200, "157.03", "154.82"));
-		data.add(new TupleType(1364860800, "157.21", "156.37"));
-		data.add(new TupleType(1364774400, "156.91", "155.67"));
-		data.add(new TupleType(1364428800, "156.85", "155.75"));
-		data.add(new TupleType(1364342400, "156.24", "155.00"));
-		data.add(new TupleType(1364256000, "156.23", "155.42"));
-		data.add(new TupleType(1364169600, "156.27", "154.35"));
-		data.add(new TupleType(1363910400, "155.60", "154.73"));
-		data.add(new TupleType(1363824000, "155.64", "154.10"));
-		data.add(new TupleType(1363737600, "155.95", "155.26"));
-		data.add(new TupleType(1363651200, "155.51", "153.59"));
-		data.add(new TupleType(1363564800, "155.64", "154.20"));
-		data.add(new TupleType(1363305600, "156.04", "155.31"));
-		data.add(new TupleType(1363219200, "156.80", "155.91"));
-		data.add(new TupleType(1363132800, "156.12", "155.23"));
-		data.add(new TupleType(1363046400, "156.10", "155.21"));
+		data.add(new TupleType(1363046400, "155.35", "153.77"));
+		data.add(new TupleType(1363132800, "156.17", "155.09"));
+		data.add(new TupleType(1363219200, "157.03", "154.82"));
+		data.add(new TupleType(1363305600, "157.21", "156.37"));
+		data.add(new TupleType(1363564800, "156.91", "155.67"));
+		data.add(new TupleType(1363651200, "156.85", "155.75"));
+		data.add(new TupleType(1363737600, "156.24", "155.00"));
+		data.add(new TupleType(1363824000, "156.23", "155.42"));
+		data.add(new TupleType(1363910400, "156.27", "154.35"));
+		data.add(new TupleType(1364169600, "155.60", "154.73"));
+		data.add(new TupleType(1364256000, "155.64", "154.10"));
+		data.add(new TupleType(1364342400, "155.95", "155.26"));
+		data.add(new TupleType(1364428800, "155.51", "153.59"));
+		data.add(new TupleType(1364774400, "155.64", "154.20"));
+		data.add(new TupleType(1364860800, "156.04", "155.31"));
+		data.add(new TupleType(1364947200, "156.80", "155.91"));
+		data.add(new TupleType(1365033600, "156.12", "155.23"));
+		data.add(new TupleType(1365120000, "156.10", "155.21"));
 
 		// when
 		for (TupleType r : data) {
@@ -74,11 +74,11 @@ public class HighsLowsTest {
 		}
 
 		// then
-		verify(collector).emit(new Values("mypair", 1363564800, "0.0085"));
-		verify(collector).emit(new Values("mypair", 1363305600, "0.0081"));
-		verify(collector).emit(new Values("mypair", 1363219200, "0.0080"));
-		verify(collector).emit(new Values("mypair", 1363132800, "0.0074"));
-		verify(collector).emit(new Values("mypair", 1363046400, "0.0075"));
+		verify(collector).emit(new Values("mypair", 1364774400, "0.0085"));
+		verify(collector).emit(new Values("mypair", 1364860800, "0.0081"));
+		verify(collector).emit(new Values("mypair", 1364947200, "0.0080"));
+		verify(collector).emit(new Values("mypair", 1365033600, "0.0074"));
+		verify(collector).emit(new Values("mypair", 1365120000, "0.0075"));
 
 	}
 }

@@ -19,7 +19,7 @@ public class OHLCBolt extends BaseRichBolt {
 	Map<String, Double> _highs;
 	Map<String, Long> _vols;
 	Map<String, Integer> _lastTimeMap;
-	Map<String, Double> _previousBidMap;
+	Map<String, Double> _previousPriceMap;
 	Map<String, Integer> _currentTimesliceMap;
 
 	public OHLCBolt(Integer time_window) {
@@ -36,17 +36,21 @@ public class OHLCBolt extends BaseRichBolt {
 		_vols = new HashMap<String, Long>();
 
 		_lastTimeMap = new HashMap<String, Integer>();
-		_previousBidMap = new HashMap<String, Double>();
+		_previousPriceMap = new HashMap<String, Double>();
 		_currentTimesliceMap = new HashMap<String, Integer>();
 	}
 
 	@Override
 	public void execute(Tuple tuple) {
+		
+		//System.out.println("-------------------------------");
 
 		String pair = tuple.getStringByField("pair");
-		Double bid = tuple.getDoubleByField("bid");
-		Double offer = tuple.getDoubleByField("offer");
+		Double price = tuple.getDoubleByField("price");
 		Long ts = (long) Math.floor((tuple.getLongByField("timestamp") / 1000));
+		
+		//System.out.println("price: " + price);
+		//System.out.println("ts: " + tuple.getLongByField("timestamp"));
 
 		// filter duplicate or old ts
 		if (_lastTimeMap.get(pair) != null && ts <= _lastTimeMap.get(pair))
@@ -60,27 +64,27 @@ public class OHLCBolt extends BaseRichBolt {
 				&& timeslice.intValue() != _currentTimesliceMap.get(pair)) {
 
 			// emit
-			_collector.emit(new Values(pair, _opens.get(pair), _highs.get(pair), _lows.get(pair),
-					_previousBidMap.get(pair), _vols.get(pair), _currentTimesliceMap.get(pair),
+			_collector.emit(new Values(pair, _opens.get(pair).toString(), _highs.get(pair).toString(), _lows.get(pair).toString(),
+					_previousPriceMap.get(pair).toString(), _vols.get(pair), _currentTimesliceMap.get(pair),
 					_time_window));
 
 			// reset
-			_opens.put(pair, bid);
-			_highs.put(pair, bid);
-			_lows.put(pair, bid);
+			_opens.put(pair, price);
+			_highs.put(pair, price);
+			_lows.put(pair, price);
 			_vols.put(pair, 0l);
 
 		} else {
 			// update ohlcv maps
 
 			if (_opens.get(pair) == null)
-				_highs.put(pair, bid);
+				_opens.put(pair, price);
 
-			if (_highs.get(pair) == null || bid > _highs.get(pair))
-				_highs.put(pair, bid);
+			if (_highs.get(pair) == null || price > _highs.get(pair))
+				_highs.put(pair, price);
 
-			if (_lows.get(pair) == null || bid < _lows.get(pair))
-				_lows.put(pair, bid);
+			if (_lows.get(pair) == null || price < _lows.get(pair))
+				_lows.put(pair, price);
 
 			if (_vols.get(pair) == null)
 				_vols.put(pair, 0l);
@@ -91,7 +95,7 @@ public class OHLCBolt extends BaseRichBolt {
 		}
 
 		// save
-		_previousBidMap.put(pair, bid);
+		_previousPriceMap.put(pair, price);
 		_lastTimeMap.put(pair, ts.intValue());
 		_currentTimesliceMap.put(pair, timeslice.intValue());
 
