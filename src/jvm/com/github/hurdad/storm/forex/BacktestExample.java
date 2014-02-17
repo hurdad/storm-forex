@@ -1,16 +1,67 @@
 package com.github.hurdad.storm.forex;
 
+import java.util.Map;
+
+import com.github.hurdad.storm.forex.LiveExample.BidOrOfferBolt;
+import com.github.hurdad.storm.forex.LiveExample.BidOrOfferBolt.Type;
 import com.github.hurdad.storm.forex.bolt.*;
 import com.github.hurdad.storm.forex.spout.*;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 
 public class BacktestExample {
+	
+	public static class BidOrOfferBolt extends BaseRichBolt {
+		OutputCollector _collector;
+		int _type;
+
+		public class Type {
+			public static final int BID = 1;
+			public static final int OFFER = 5;
+
+		}
+
+		public BidOrOfferBolt(String type) {
+			if (type.equals("BID"))
+				_type = Type.BID;
+
+			if (type.equals("OFFER"))
+				_type = Type.OFFER;
+
+		}
+
+		@Override
+		public void prepare(Map conf, TopologyContext context, OutputCollector collector) {
+			_collector = collector;
+		}
+
+		@Override
+		public void execute(Tuple tuple) {
+			if (_type == Type.BID)
+				_collector.emit(tuple, new Values(tuple.getStringByField("pair"), tuple.getLongByField("timestamp"), tuple.getDoubleByField("bid")));
+
+			if (_type == Type.OFFER)
+				_collector.emit(tuple, new Values(tuple.getStringByField("pair"), tuple.getLongByField("timestamp"), tuple.getDoubleByField("offer")));
+
+		}
+
+		@Override
+		public void declareOutputFields(OutputFieldsDeclarer declarer) {
+			declarer.declare(new Fields("pair", "timestamp", "price"));
+		}
+
+	}
 
 	public static void main(String[] args) throws Exception {
 		TopologyBuilder builder = new TopologyBuilder();
@@ -18,9 +69,13 @@ public class BacktestExample {
 		// only run one JDBC Spout or get duplicate tuples
 		builder.setSpout("jdbc", new JDBCTickSpout("com.mysql.jdbc.Driver",
 				"jdbc:mysql://127.0.0.1/forex", "forex", "forex"), 1);
+		
+		//forward bid or offer price
+		builder.setBolt("price", new BidOrOfferBolt("BID")).shuffleGrouping("jdbc");
+
 
 		// five minute candles (300 sec)
-		builder.setBolt("ohlc_300", new OHLCBolt(5 * 60), 1).fieldsGrouping("jdbc",
+		builder.setBolt("ohlc_300", new OHLCBolt(5 * 60), 1).fieldsGrouping("price",
 				new Fields("pair"));
 
 		// moving averages
@@ -54,7 +109,7 @@ public class BacktestExample {
 				new Fields("pair"));
 
 		Config conf = new Config();
-		// conf.setDebug(true);
+		conf.setDebug(true);
 
 		if (args != null && args.length > 0) {
 			conf.setNumWorkers(3);
